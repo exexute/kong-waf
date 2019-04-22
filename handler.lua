@@ -352,11 +352,6 @@ end
 -- 定义插件构造函数
 function KongWaf:new()
   KongWaf.super.new(self, "KongWaf")
-  urlrules=read_waf_rule('url')
-  argsrules=read_waf_rule('args')
-  uarules=read_waf_rule('user-agent')
-  postrules=read_waf_rule('post')
-  ckrules=read_waf_rule('cookie')
 end
 
 -- 构造插件初始化函数, 在每个Nginx Worker启动时执行
@@ -366,6 +361,11 @@ function KongWaf:init_worker()
   if not ok then
     kong.log.err("could not enable lrucache: ", err)
   end
+  urlrules=read_waf_rule('url')
+  argsrules=read_waf_rule('args')
+  uarules=read_waf_rule('user-agent')
+  postrules=read_waf_rule('post')
+  ckrules=read_waf_rule('cookie')
 end
 
 -- 构造插件访问逻辑, 判断黑白名单, WAF判断在这里实现
