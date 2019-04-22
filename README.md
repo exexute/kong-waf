@@ -1,15 +1,21 @@
 ## kong-waf
 通过正则规则限制请求, 同时支持IP黑名单拦截后端请求. IP黑名单可以是单个IP、IP段或CIDR.
 
-## 术语
-- `plugin`: 
+## 部署
+1. 进入kong源码目录, 一般为`/usr/local/share/lua/5.1/kong/`
+2. 修改插件配置文件`constants.lua`, 增加插件`kong-waf`.
+3. 进入plugin目录, 下载插件`cd plugins; git clone https://github.com/exexute/kong-waf.git`
+4. 重启服务即可.
+
+## 配置
+
+### 术语
+- `plugin`:
 - `Service`:
 - `Route`:
 - `Consumer`:
 - `Credential`:
 - `upstream service`:
-
-## 配置
 
 ### 在某一个service上启用服务
 在服务上启用插件
