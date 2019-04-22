@@ -207,6 +207,7 @@ local function waf_args_check( ... )
                 data=val
             end
             tb_rules = split_waf_rule(rule, '@@@')
+            waf_log("get", ngx.var.request_uri, "-"..ngx.unescape_uri(data), tb_rules[1])
             if data and type(data) ~= "boolean" and rule ~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
                 waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
                 return true
