@@ -391,7 +391,7 @@ function KongWaf:access(conf)
   end
 
   attacklog=optionIsOn(conf.attacklog)
-  black_fileExt=Set()
+  black_fileExt=waf_conf_set(conf.black_fileExt)
   attacked=waf(conf)
   if conf.urldeny and attacked then
   	return kong.response.exit(FORBIDDEN, { message = "Your request has attack data." })
