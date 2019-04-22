@@ -80,3 +80,24 @@ $ curl -X POST http://kong:8001/plugins \
     --data "config.postmatch=on" \
     --data "config.black_fileExt=php,jsp,asp"
 ```
+
+
+### 参数
+下面是kong-waf插件需要用到的插件
+| 参数名 | 默认值 | 参数解释 |
+| :------| ------: | :------: |
+| `name` |  | 要使用的插件名, `kong-waf` |
+| `service_id` |  | 调用插件的服务id |
+| `route_id` |  | 调用插件的路由id |
+| `enabled` | true | 插件是否启用, 默认为启用 |
+| `consumer_id` |  | 调用插件的消费者id |
+| `config.whitelist` |  | ip白名单, 该部分IP不需要经过waf检查 |
+| `config.blacklist` |  | ip黑名单, 该部分IP不允许访问后端服务 |
+| `config.rulepath` |  | waf规则所在目录, 必须指定 |
+| `config.attacklog` |  | 是否记录攻击日志, `on`-记录, 不指定 - 不记录 |
+| `config.logdir` |  | 日志的输出位置 |
+| `config.urldeny` |  | 是否检查url, `on`-检查, 其他不检查 |
+| `config.cookiematch` |  | 是否检查cookie值, `on` - 检查 |
+| `config.postmatch` |  | 是否检查post请求, `on` - 检查 |
+| `config.black_fileExt` |  | 禁止上传文件的后缀名列表, php,jsp,do |
+
