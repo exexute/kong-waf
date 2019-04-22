@@ -101,11 +101,13 @@ end
 -- waf插件相关函数
 
 local function waf_log_write(logfile,msg)
-    local fd = io.open(logfile,"ab")
-    if fd == nil then return end
-    fd:write(msg)
-    fd:flush()
-    fd:close()
+  print(logfile)
+  print(msg)
+  local fd = io.open(logfile,"ab")
+  if fd == nil then return end
+  fd:write(msg)
+  fd:flush()
+  fd:close()
 end
 
 local function waf_log(method, url, data, ruletag)
@@ -121,8 +123,6 @@ local function waf_log(method, url, data, ruletag)
             line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\" - \""..ruletag.."\"\n"
         end
         local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
-        print(filename)
-        print(data)
         waf_log_write(filename,line)
     end
 end
@@ -210,7 +210,7 @@ local function waf_args_check( ... )
                 data=val
             end
             tb_rules = split_waf_rule(rule, '@@@')
-            waf_log("get", ngx.var.request_uri, "-"..ngx.unescape_uri(data), tb_rules[1])
+            waf_log("get", ngx.var.request_uri, "-"..args, tb_rules[1])
             if data and type(data) ~= "boolean" and rule ~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
                 waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
                 return true
