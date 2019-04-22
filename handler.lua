@@ -351,7 +351,7 @@ end
 
 -- 定义插件构造函数
 function KongWaf:new()
-  KongWaf.super.new(self, "ip-restriction")
+  KongWaf.super.new(self, "KongWaf")
   urlrules=read_waf_rule('url')
   argsrules=read_waf_rule('args')
   uarules=read_waf_rule('user-agent')

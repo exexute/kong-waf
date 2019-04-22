@@ -19,7 +19,6 @@ return {
           { cookiematch = { type = "string", required = true, }, },
           { postmatch = { type = "string", required = true, }, },
           { black_fileExt = { type = "array", elements = typedefs.string, }, },
-          { attacklog = { type = "string", required = true, }, },
         },
       },
     },
