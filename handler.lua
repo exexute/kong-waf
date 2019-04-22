@@ -211,7 +211,7 @@ local function waf_args_check( ... )
         data=val
       end
       tb_rules = split_waf_rule(rule, '@@@')
-      waf_log("get", ngx.var.request_uri, "-"..args, tb_rules[1])
+      kong.log.info(tb_rules[2])
       if data and type(data) ~= "boolean" and rule ~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
         waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
         return true
@@ -399,9 +399,13 @@ function KongWaf:access(conf)
     return kong.response.exit(FORBIDDEN, { message = "Your IP address is not allowed" })
   end
 
+  kong.log.info("start init waf")
   logpath=conf.logdir
+  kong.log.info(logpath)
   attacklog=optionIsOn(conf.attacklog)
+  kong.log.info(attacklog)
   black_fileExt=waf_conf_set(conf.black_fileExt)
+  kong.log.info(black_fileExt)
   attacked=waf(conf)
   if conf.urldeny and attacked then
   	return kong.response.exit(FORBIDDEN, { message = "Your request has attack data." })
