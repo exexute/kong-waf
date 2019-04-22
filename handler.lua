@@ -6,6 +6,8 @@ local FORBIDDEN = 403
 -- cache of parsed CIDR values
 local cache = {}
 
+
+local ngxmatch=ngx.re.match
 -- 定义waf规则变量
 local uarules = ""
 local ckrules = ""
@@ -18,6 +20,7 @@ local black_fileExt = {}
 
 
 local KongWaf = BasePlugin:extend()
+
 
 KongWaf.PRIORITY = 990
 KongWaf.VERSION = "1.0.0"
