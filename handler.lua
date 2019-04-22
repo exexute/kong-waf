@@ -61,16 +61,17 @@ end
 local optionIsOn = function (options) return options == "on" and true or false end
 
 local function read_waf_rule(var)
-    file = io.open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
-    if file==nil then
-        return
-    end
-    t = {}
-    for line in file:lines() do
-        table.insert(t,line)
-    end
-    file:close()
-    return(t)
+  file = io.open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
+  if file==nil then
+    return
+  end
+  t = {}
+
+  for line in file:lines() do
+    table.insert(t,line)
+  end
+  file:close()
+  return(t)
 end
 
 -- 定义插件规则拆分函数
@@ -111,19 +112,21 @@ end
 local function waf_log(method, url, data, ruletag)
 	-- body
 	if attacklog then
-    	local realIp = ngx.var.binary_remote_addr
-        local ua = ngx.var.http_user_agent
-        local servername=ngx.var.server_name
-        local time=ngx.localtime()
-        if ua  then
-            line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\"  \""..ua.."\" \""..ruletag.."\"\n"
-        else
-            line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\" - \""..ruletag.."\"\n"
-        end
-        local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
-        print(filename)
-        waf_log_write(filename,line)
+    local realIp = ngx.var.binary_remote_addr
+    local ua = ngx.var.http_user_agent
+    local servername=ngx.var.server_name
+    local time=ngx.localtime()
+
+    if ua  then
+      line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\"  \""..ua.."\" \""..ruletag.."\"\n"
+    else
+      line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\" - \""..ruletag.."\"\n"
     end
+
+    local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
+    print(filename)
+    waf_log_write(filename,line)
+  end
 end
 
 -- 定义插件后缀检测函数
@@ -178,16 +181,16 @@ end
 -- 定义waf插件user-agent检测函数
 local function waf_ua_check( ... )
 	-- body
-    local ua = ngx.var.http_user_agent
-    if ua ~= nil then
-        for _,rule in pairs(uarules) do
-            if rule ~="" and ngx.re.match(ua,rule,"isjo") then
-                waf_log('UA',ngx.var.request_uri,"-",rule)
-                return true
-            end
-        end
+  local ua = ngx.var.http_user_agent
+  if ua ~= nil then
+    for _,rule in pairs(uarules) do
+      if rule ~="" and ngx.re.match(ua,rule,"isjo") then
+        waf_log('UA',ngx.var.request_uri,"-",rule)
+        return true
+      end
     end
-    return false
+  end
+  return false
 end
 
 -- 定义waf插件get参数检测函数
@@ -242,9 +245,9 @@ local function waf_body_check( ... )
 		if rule ~="" and data~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
 			waf_log('POST',ngx.var.request_uri,data,tb_rules[1])
 			return true
-        end
     end
-    return false
+  end
+  return false
 end
 
 -- 定义waf插件post请求检测函数
@@ -402,7 +405,7 @@ function KongWaf:access(conf)
   attacklog=optionIsOn(conf.attacklog)
   black_fileExt=waf_conf_set(conf.black_fileExt)
   attacked=waf(conf)
-  if conf.urldeny and attacked then
+  if optionIsOn(conf.urldeny) and attacked then
   	return kong.response.exit(FORBIDDEN, { message = "Your request has attack data." })
   end
 end
