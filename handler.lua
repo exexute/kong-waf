@@ -195,29 +195,30 @@ end
 local function waf_args_check( ... )
 	-- body
 	for _,rule in pairs(argsrules) do
-        local args = ngx.req.get_uri_args()
-        for key, val in pairs(args) do
-            if type(val)=='table' then
-                 local t={}
-                 for k,v in pairs(val) do
-                    if v == true then
-                        v=""
-                    end
-                    table.insert(t,v)
-                end
-                data=table.concat(t, " ")
-            else
-                data=val
-            end
-            tb_rules = split_waf_rule(rule, '@@@')
-            waf_log("get", ngx.var.request_uri, "-"..args, tb_rules[1])
-            if data and type(data) ~= "boolean" and rule ~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
-                waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
-                return true
-            end
+    local args = ngx.req.get_uri_args()
+    for key, val in pairs(args) do
+      if type(val)=='table' then
+        local t={}
+        for k,v in pairs(val) do
+          print(v)
+          if v == true then
+            v=""
+          end
+          table.insert(t,v)
         end
+        data=table.concat(t, " ")
+      else
+        data=val
+      end
+      tb_rules = split_waf_rule(rule, '@@@')
+      waf_log("get", ngx.var.request_uri, "-"..args, tb_rules[1])
+      if data and type(data) ~= "boolean" and rule ~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
+        waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
+        return true
+      end
     end
-    return false
+  end
+  return false
 end
 
 -- 定义waf插件cookie参数检测函数
