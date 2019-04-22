@@ -24,7 +24,7 @@ return {
     Redirect = {type = "string", required = true},
     cookiematch = {type = "string", required = true},
     postmatch = {type = "string", required = true},
-    black_fileExt = {type = "array", elements = typedefs.string}
+    black_fileExt = {type = "array", elements = string}
   },
   self_check = function(schema, plugin_t, dao, is_update)
     local wl = type(plugin_t.whitelist) == "table" and plugin_t.whitelist or {}
