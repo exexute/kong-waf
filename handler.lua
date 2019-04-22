@@ -122,6 +122,7 @@ local function waf_log(method, url, data, ruletag)
         end
         local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
         print(filename)
+        print(data)
         waf_log_write(filename,line)
     end
 end
