@@ -8,6 +8,7 @@ local cache = {}
 
 
 local ngxmatch=ngx.re.match
+local unescape=ngx.unescape_uri
 -- 定义waf规则变量
 local uarules = ""
 local ckrules = ""
