@@ -56,7 +56,7 @@ end
 local optionIsOn = function (options) return options == "on" and true or false end
 
 local function read_waf_rule(var)
-    file = io.open('./wafconf/'..var,"r")
+    file = io.open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
     if file==nil then
         return
     end
