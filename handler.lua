@@ -164,7 +164,7 @@ local function waf_url_check(urldeny)
   if optionIsOn(urldeny) then
     for _,rule in pairs(urlrules) do
       tb_rules = split_waf_rule(rule, '@@@')
-      if rule ~="" and ngxmatch(ngx.var.request_uri,tb_rules[2],"isjo") then
+      if rule ~="" and ngx.re.match(ngx.var.request_uri,tb_rules[2],"isjo") then
         waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
         return true
       end
@@ -179,7 +179,7 @@ local function waf_ua_check( ... )
     local ua = ngx.var.http_user_agent
     if ua ~= nil then
         for _,rule in pairs(uarules) do
-            if rule ~="" and ngxmatch(ua,rule,"isjo") then
+            if rule ~="" and ngx.re.match(ua,rule,"isjo") then
                 waf_log('UA',ngx.var.request_uri,"-",rule)
                 return true
             end
@@ -207,7 +207,7 @@ local function waf_args_check( ... )
                 data=val
             end
             tb_rules = split_waf_rule(rule, '@@@')
-            if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(unescape(data),tb_rules[2],"isjo") then
+            if data and type(data) ~= "boolean" and rule ~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
                 waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
                 return true
             end
@@ -223,7 +223,7 @@ local function waf_cookie_check( cookie_check )
     if optionIsOn(cookie_check) and ck then
         for _,rule in pairs(ckrules) do
             tb_rules = split_waf_rule(rule, '@@@')
-            if rule ~="" and ngxmatch(ck,tb_rules[2],"isjo") then
+            if rule ~="" and ngx.re.match(ck,tb_rules[2],"isjo") then
                 waf_log('Cookie',ngx.var.request_uri,"-",tb_rules[1])
             	return true
             end
@@ -236,7 +236,7 @@ local function waf_body_check( ... )
 	-- body
 	for _,rule in pairs(postrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
-		if rule ~="" and data~="" and ngxmatch(unescape(data),tb_rules[2],"isjo") then
+		if rule ~="" and data~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
 			waf_log('POST',ngx.var.request_uri,data,tb_rules[1])
 			return true
         end
@@ -284,12 +284,12 @@ local function waf_post_check( check_post )
             end
 
             size = size + len(data)
-            local m = ngxmatch(data,[[Content-Disposition: form-data;(.+)filename="(.+)\\.(.*)"]],'ijo')
+            local m = ngx.re.match(data,[[Content-Disposition: form-data;(.+)filename="(.+)\\.(.*)"]],'ijo')
             if m then
                 waf_ext_check(m[3])
                 filetranslate = true
             else
-                if ngxmatch(data,"Content-Disposition:",'isjo') then
+                if ngx.re.match(data,"Content-Disposition:",'isjo') then
                     filetranslate = false
                 end
 
