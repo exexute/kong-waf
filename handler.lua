@@ -16,6 +16,7 @@ local urlrules = ""
 local argsrules = ""
 local postrules = ""
 
+local logpath=""
 local attacklog = true
 local black_fileExt = {}
 
@@ -395,6 +396,7 @@ function KongWaf:access(conf)
     return kong.response.exit(FORBIDDEN, { message = "Your IP address is not allowed" })
   end
 
+  logpath=conf.logdir
   attacklog=optionIsOn(conf.attacklog)
   black_fileExt=waf_conf_set(conf.black_fileExt)
   attacked=waf(conf)
