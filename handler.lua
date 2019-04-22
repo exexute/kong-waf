@@ -1,6 +1,5 @@
 local BasePlugin = require "kong.plugins.base_plugin"
 local iputils = require "resty.iputils"
-local waf_config = require "config"
 
 local FORBIDDEN = 403
 
@@ -18,10 +17,10 @@ local attacklog = true
 local black_fileExt = {}
 
 
-local IpRestrictionHandler = BasePlugin:extend()
+local KongWaf = BasePlugin:extend()
 
-IpRestrictionHandler.PRIORITY = 990
-IpRestrictionHandler.VERSION = "1.0.0"
+KongWaf.PRIORITY = 990
+KongWaf.VERSION = "1.0.0"
 
 local function cidr_cache(cidr_tab)
   local cidr_tab_len = #cidr_tab
@@ -351,8 +350,8 @@ local function waf( conf )
 end
 
 -- 定义插件构造函数
-function IpRestrictionHandler:new()
-  IpRestrictionHandler.super.new(self, "ip-restriction")
+function KongWaf:new()
+  KongWaf.super.new(self, "ip-restriction")
   urlrules=read_waf_rule('url')
   argsrules=read_waf_rule('args')
   uarules=read_waf_rule('user-agent')
@@ -361,8 +360,8 @@ function IpRestrictionHandler:new()
 end
 
 -- 构造插件初始化函数, 在每个Nginx Worker启动时执行
-function IpRestrictionHandler:init_worker()
-  IpRestrictionHandler.super.init_worker(self)
+function KongWaf:init_worker()
+  KongWaf.super.init_worker(self)
   local ok, err = iputils.enable_lrucache()
   if not ok then
     kong.log.err("could not enable lrucache: ", err)
@@ -370,8 +369,8 @@ function IpRestrictionHandler:init_worker()
 end
 
 -- 构造插件访问逻辑, 判断黑白名单, WAF判断在这里实现
-function IpRestrictionHandler:access(conf)
-  IpRestrictionHandler.super.access(self)
+function KongWaf:access(conf)
+  KongWaf.super.access(self)
   local block = false
   local binary_remote_addr = ngx.var.binary_remote_addr-- 获取客户端真实IP地址
 
@@ -399,4 +398,4 @@ function IpRestrictionHandler:access(conf)
   end
 end
 
-return IpRestrictionHandler
+return KongWaf
