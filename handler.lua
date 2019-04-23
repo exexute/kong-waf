@@ -147,7 +147,7 @@ end
 
 local function waf_get_boundary( ... )
 	-- body
-	local header = get_headers()["content-type"]
+	local header = kong.request.get_headers()["content-type"]
     if not header then
         return nil
     end
