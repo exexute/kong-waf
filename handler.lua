@@ -238,7 +238,7 @@ local function waf_cookie_check( cookie_check )
     return false
 end
 
-local function waf_body_check( ... )
+local function waf_body_check( data )
 	-- body
 	for _,rule in pairs(postrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
@@ -256,7 +256,7 @@ local function waf_post_check( check_post )
 	if optionIsOn(check_post) == false then
 		return false
 	end
-
+  print(ngx.req.get_headers())
 	local content_length=tonumber(ngx.req.get_headers()['content-length'])
 	local method=ngx.req.get_method()
     if method=="POST" then
@@ -341,22 +341,22 @@ end
 local function waf( conf )
 	-- body
 	if ngx.var.http_Acunetix_Aspect then
-        ngx.exit(444)
-    elseif ngx.var.http_X_Scan_Memo then
-        ngx.exit(444)
-    elseif waf_ua_check() then
-    	return true
-    elseif waf_url_check(conf.urldeny) then
-    	return true
-    elseif waf_args_check() then
-    	return true
-    elseif waf_cookie_check(conf.cookiematch) then
-    	return true
-    elseif waf_post_check(conf.postmatch) then
-    	return true
-    else
-    	return
-    end
+    ngx.exit(444)
+  elseif ngx.var.http_X_Scan_Memo then
+    ngx.exit(444)
+  elseif waf_ua_check() then
+    return true
+  elseif waf_url_check(conf.urldeny) then
+    return true
+  elseif waf_args_check() then
+    return true
+  elseif waf_cookie_check(conf.cookiematch) then
+    return true
+  elseif waf_post_check(conf.postmatch) then
+    return true
+  else
+    return false
+  end
 end
 
 -- 定义插件构造函数
