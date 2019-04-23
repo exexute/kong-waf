@@ -7,8 +7,10 @@ local FORBIDDEN = 403
 local cache = {}
 
 
-local ngxmatch=ngx.re.match
-local unescape=ngx.unescape_uri
+local match = string.match
+local ngxmatch = ngx.re.match
+local unescape = ngx.unescape_uri
+local headers = {}
 -- 定义waf规则变量
 local uarules = ""
 local ckrules = ""
@@ -147,7 +149,7 @@ end
 
 local function waf_get_boundary( ... )
 	-- body
-	local header = kong.request.get_headers()["content-type"]
+	local header = headers["content-type"]
     if not header then
         return nil
     end
@@ -257,7 +259,6 @@ local function waf_post_check( check_post )
 	if optionIsOn(check_post) == false then
 		return false
 	end
-  local headers = kong.request.get_headers()
 	local content_length = tonumber(headers['content-length'])
 	local method = kong.request.get_method()
     if method == "POST" then
@@ -402,6 +403,7 @@ function KongWaf:access(conf)
   end
 
   kong.log.info("start init waf")
+  headers = kong.request.get_headers()
   logpath=conf.logdir
   attacklog=optionIsOn(conf.attacklog)
   black_fileExt=waf_conf_set(conf.black_fileExt)
