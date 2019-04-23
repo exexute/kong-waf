@@ -345,15 +345,15 @@ local function waf( conf )
     ngx.exit(444)
   elseif ngx.var.http_X_Scan_Memo then
     ngx.exit(444)
-  elseif waf_ua_check() then
-    return true
   elseif waf_url_check(conf.urldeny) then
-    return true
-  elseif waf_cookie_check(conf.cookiematch) then
     return true
   elseif waf_args_check() then
     return true
   elseif waf_post_check(conf.postmatch) then
+    return true
+  elseif waf_ua_check() then
+    return true
+  elseif waf_cookie_check(conf.cookiematch) then
     return true
   else
     return false
