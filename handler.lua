@@ -184,8 +184,9 @@ local function waf_ua_check( ... )
   local ua = ngx.var.http_user_agent
   if ua ~= nil then
     for _,rule in pairs(uarules) do
-      if rule ~="" and ngx.re.match(ua,rule,"isjo") then
-        waf_log('UA',ngx.var.request_uri,"-",rule)
+      tb_rules = split_waf_rule(rule, '@@@')
+      if rule ~="" and ngx.re.match(ua,tb_rules[2],"isjo") then
+        waf_log('UA',ngx.var.request_uri,"-",tb_rules[1])
         return true
       end
     end
@@ -348,9 +349,9 @@ local function waf( conf )
     return true
   elseif waf_url_check(conf.urldeny) then
     return true
-  elseif waf_args_check() then
-    return true
   elseif waf_cookie_check(conf.cookiematch) then
+    return true
+  elseif waf_args_check() then
     return true
   elseif waf_post_check(conf.postmatch) then
     return true
