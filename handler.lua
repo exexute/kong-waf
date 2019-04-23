@@ -256,8 +256,8 @@ local function waf_post_check( check_post )
 	if optionIsOn(check_post) == false then
 		return false
 	end
-  ngx.print(ngx.req.get_headers()['content-length'])
-	local content_length=tonumber(ngx.req.get_headers()['content-length'])
+  local headers = ngx.req.get_headers()
+	local content_length=tonumber(headers['content-length'])
 	local method=ngx.req.get_method()
     if method=="POST" then
         local boundary = waf_get_boundary()
@@ -270,7 +270,7 @@ local function waf_post_check( check_post )
         ngx.req.init_body(128 * 1024)
         sock:settimeout(0)
         local content_length = nil
-        content_length=tonumber(ngx.req.get_headers()['content-length'])
+        content_length=tonumber(headers['content-length'])
         local chunk_size = 4096
         if content_length < chunk_size then
             chunk_size = content_length
