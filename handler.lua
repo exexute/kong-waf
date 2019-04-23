@@ -315,7 +315,7 @@ local function waf_post_check( check_post )
          end
          kong.request.finish_body()
         else
-            kong.request.get_body_data()
+            --kong.request.get_body_data()
             local args = kong.request.get_body()
             if not args then
                 return
