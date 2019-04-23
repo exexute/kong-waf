@@ -198,7 +198,7 @@ end
 local function waf_args_check( ... )
 	-- body
 	for _,rule in pairs(argsrules) do
-    local args = kong.request.get_uri_args()
+    local args = kong.request.get_query()
     for key, val in pairs(args) do
       if type(val)=='table' then
         local t={}
@@ -315,7 +315,7 @@ local function waf_post_check( check_post )
          kong.request.finish_body()
         else
             kong.request.read_body()
-            local args = kong.request.get_post_args()
+            local args = kong.request.get_body()
             if not args then
                 return
             end
