@@ -198,7 +198,7 @@ end
 local function waf_args_check( ... )
 	-- body
 	for _,rule in pairs(argsrules) do
-    local args = ngx.req.get_uri_args()
+    local args = kong.request.get_uri_args()
     for key, val in pairs(args) do
       if type(val)=='table' then
         local t={}
@@ -243,8 +243,8 @@ local function waf_body_check( data )
 	-- body
 	for _,rule in pairs(postrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
-		if rule ~="" and data~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
-			waf_log('POST',ngx.var.request_uri,data,tb_rules[1])
+		if rule ~= "" and data ~= "" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
+			waf_log( 'POST', ngx.var.request_uri, data, tb_rules[1] )
 			return true
     end
   end
@@ -257,21 +257,21 @@ local function waf_post_check( check_post )
 	if optionIsOn(check_post) == false then
 		return false
 	end
-  local headers = ngx.req.get_headers()
-	local content_length=tonumber(headers['content-length'])
-	local method=ngx.req.get_method()
-    if method=="POST" then
+  local headers = kong.request.get_headers()
+	local content_length = tonumber(headers['content-length'])
+	local method = kong.request.get_method()
+    if method == "POST" then
         local boundary = waf_get_boundary()
         if boundary then
         	local len = string.len
-            local sock, err = ngx.req.socket()
+            local sock, err = kong.request.socket()
             if not sock then
                 return
             end
-        ngx.req.init_body(128 * 1024)
+        kong.request.init_body(128 * 1024)
         sock:settimeout(0)
         local content_length = nil
-        content_length=tonumber(headers['content-length'])
+        content_length = tonumber(headers['content-length'])
         local chunk_size = 4096
         if content_length < chunk_size then
             chunk_size = content_length
@@ -285,7 +285,7 @@ local function waf_post_check( check_post )
                 return
             end
 
-            ngx.req.append_body(data)
+            kong.request.append_body(data)
             if waf_body_check(data) then
                 return true
             end
@@ -312,10 +312,10 @@ local function waf_post_check( check_post )
                 chunk_size = less
             end
          end
-         ngx.req.finish_body()
+         kong.request.finish_body()
         else
-            ngx.req.read_body()
-            local args = ngx.req.get_post_args()
+            kong.request.read_body()
+            local args = kong.request.get_post_args()
             if not args then
                 return
             end
