@@ -256,7 +256,7 @@ local function waf_post_check( check_post )
 	if optionIsOn(check_post) == false then
 		return false
 	end
-  print(ngx.req.get_headers())
+  ngx.print(ngx.req.get_headers()['content-length'])
 	local content_length=tonumber(ngx.req.get_headers()['content-length'])
 	local method=ngx.req.get_method()
     if method=="POST" then
