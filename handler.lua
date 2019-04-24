@@ -175,6 +175,7 @@ local function waf_url_check(urldeny)
   if optionIsOn(urldeny) then
     for _,rule in pairs(urlrules) do
       tb_rules = split_waf_rule(rule, '@@@')
+      kong.log.err(ngx.var.request_uri)
       if rule ~="" and ngx.re.match(ngx.var.request_uri,tb_rules[2],"isjo") then
         waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
         return true
@@ -205,6 +206,7 @@ local function waf_args_check( ... )
 	-- body
 	for _,rule in pairs(argsrules) do
     local args = request.get_query()
+    kong.log.err(args)
     for key, val in pairs(args) do
       if type(val)=='table' then
         local t={}
@@ -261,13 +263,11 @@ end
 -- 定义waf插件post请求检测函数
 local function waf_post_check( check_post )
   -- body
-  kong.log.err(check_post)
   if optionIsOn(check_post) then
     local content_length = tonumber(headers['content-length'])
     local method = request.get_method()
-    kong.log.err(method)
     if method == "POST" then
-      body_raw = request.get_raw_body()
+      body_raw = kong.request.get_raw_body()
       kong.log.err(body_raw)
       if body_raw then
         local form = ngx.decode_args(body_raw)
