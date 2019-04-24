@@ -108,7 +108,7 @@ end
 -- waf插件相关函数
 
 local function waf_log_write(logfile,msg)
-  local fd = io.open(logfile,"ab")
+  local fd = io.open("/usr/local/kong/logs/sec_kong_2019_04_24.log","ab")
   if fd == nil then return end
   fd:write(msg)
   fd:flush()
@@ -232,17 +232,19 @@ end
 -- 定义waf插件cookie参数检测函数
 local function waf_cookie_check( cookie_check )
 	-- body
-	local ck = ngx.var.http_cookie
-    if optionIsOn(cookie_check) and ck then
-        for _,rule in pairs(ckrules) do
-            tb_rules = split_waf_rule(rule, '@@@')
-            if rule ~="" and ngx.re.match(ck,tb_rules[2],"isjo") then
-                waf_log('Cookie',ngx.var.request_uri,"-",tb_rules[1])
-            	return true
-            end
-        end
+  local var = ngx.var
+	local ck = var.http_cookie
+  kong.log.error(ck)
+  if optionIsOn(cookie_check) and ck then
+    for _,rule in pairs(ckrules) do
+      tb_rules = split_waf_rule(rule, '@@@')
+      if rule ~="" and ngx.re.match(ck,tb_rules[2],"isjo") then
+        waf_log('Cookie',ngx.var.request_uri,"-",tb_rules[1])
+        return true
+      end
     end
-    return false
+  end
+  return false
 end
 
 local function waf_body_check( data )
