@@ -10,10 +10,15 @@ local cache = {}
 local request = nil -- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
 local ngx = ngx
 local kong = kong
-local pairs = pairs
-local match = string.match
 local ngxmatch = ngx.re.match
 local unescape = ngx.unescape_uri
+
+local table = table
+local pairs = pairs
+local lower = string.lower
+local match = string.match
+local open = io.open
+
 local headers = {}
 -- 定义waf规则变量
 local uarules = nil
@@ -68,11 +73,11 @@ end
 local optionIsOn = function (options) return options == "on" and true or false end
 
 local function read_waf_rule(var)
-  file = io.open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
+  local file = open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
   if file==nil then
     return
   end
-  t = {}
+  local t = {}
 
   for line in file:lines() do
     table.insert(t,line)
@@ -108,9 +113,8 @@ local function waf_conf_set( list )
 end
 -- waf插件相关函数
 
-local function waf_log_write(logfile,msg)
-  --local fd = io.open(logfile,"ab")
-  local fd = io.open("/usr/local/kong/logs/sec.log","a")
+local function waf_log_write( logfile, msg )
+  local fd = io.open(logfile,"ab")
   if fd == nil then return end
   fd:write(msg)
   fd:flush()
@@ -122,30 +126,29 @@ local function waf_log(method, url, data, ruletag)
 	if attacklog then
     local realIp = ngx.var.binary_remote_addr
     local ua = ngx.var.http_user_agent
-    local servername=ngx.var.server_name
-    local time=ngx.localtime()
+    local servername = ngx.var.server_name
+    local time = ngx.localtime()
 
     if ua  then
-      line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\"  \""..ua.."\" \""..ruletag.."\"\n"
+      local line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\"  \""..ua.."\" \""..ruletag.."\"\n"
     else
-      line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\" - \""..ruletag.."\"\n"
+      local line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\" - \""..ruletag.."\"\n"
     end
 
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
-    kong.log.err(filename)
-    waf_log_write(filename,line)
+    kong.log.err( filename )
+    waf_log_write( filename, line )
   end
 end
 
 -- 定义插件后缀检测函数
 local function waf_ext_check(ext)
   local items = waf_conf_set(black_fileExt)
-  ext=string.lower(ext)
+  local ext = lower(ext)
   if ext then
     for rule in pairs(items) do
       if ngx.re.find(ext,rule,"isjo") then
-      waf_log('POST', uri, "-", "file attack with ext "..ext)
-        say_html()
+        waf_log('POST', uri, "-", "file attack with ext "..ext)
       end
     end
   end
@@ -174,8 +177,6 @@ end
 
 -- 定义waf插件url检测函数
 local function waf_url_check(urldeny)
-  kong.log.err("enter url check")
-  kong.log.err(uri)
   if optionIsOn(urldeny) then
     for _,rule in pairs(urlrules) do
       tb_rules = split_waf_rule(rule, '@@@')
@@ -191,7 +192,6 @@ end
 -- 定义waf插件user-agent检测函数
 local function waf_ua_check( ... )
 	-- body
-  kong.log.err("enter ua check")
   local ua = ngx.var.http_user_agent
   if ua ~= nil then
     for _,rule in pairs(argsrules) do
@@ -208,14 +208,12 @@ end
 -- 定义waf插件get参数检测函数
 local function waf_args_check( ... )
 	-- body
-  kong.log.err("enter args check")
 	for _,rule in pairs(argsrules) do
     local args = request.get_query()
     for key, val in pairs(args) do
       if type(val)=='table' then
         local t={}
         for k,v in pairs(val) do
-          print(v)
           if v == true then
             v=""
           end
@@ -238,9 +236,7 @@ end
 -- 定义waf插件cookie参数检测函数
 local function waf_cookie_check( cookie_check )
 	-- body
-  kong.log.err("enter cookie check")
 	local ck = ngx.var.http_cookie
-  kong.log.err(ck)
   if optionIsOn(cookie_check) and ck then
     for _,rule in pairs(argsrules) do
       tb_rules = split_waf_rule(rule, '@@@')
@@ -255,7 +251,6 @@ end
 
 local function waf_body_check( data )
 	-- body
-  kong.log.err("enter body check")
 	for _,rule in pairs(argsrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
 		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
@@ -269,7 +264,6 @@ end
 -- 定义waf插件post请求检测函数
 local function waf_post_check( check_post )
   -- body
-  kong.log.err("enter post check")
   local post_status = nil
   if optionIsOn(check_post) then
     local content_length = tonumber(headers['content-length'])
