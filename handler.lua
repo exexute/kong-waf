@@ -7,6 +7,7 @@ local FORBIDDEN = 403
 local cache = {}
 
 
+local request = "" -- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
 local match = string.match
 local ngxmatch = ngx.re.match
 local unescape = ngx.unescape_uri
@@ -200,7 +201,7 @@ end
 local function waf_args_check( ... )
 	-- body
 	for _,rule in pairs(argsrules) do
-    local args = kong.request.get_query()
+    local args = request.get_query()
     for key, val in pairs(args) do
       if type(val)=='table' then
         local t={}
@@ -255,21 +256,19 @@ end
 
 -- 定义waf插件post请求检测函数
 local function waf_post_check( check_post )
-	-- body
-	if optionIsOn(check_post) == false then
-		return false
-	end
-	local content_length = tonumber(headers['content-length'])
-	local method = kong.request.get_method()
+  -- body
+  if optionIsOn(check_post) then
+    local content_length = tonumber(headers['content-length'])
+    local method = request.get_method()
     if method == "POST" then
         local boundary = waf_get_boundary()
         if boundary then
-        	local len = string.len
-            local sock, err = kong.request.socket()
+          local len = string.len
+            local sock, err = request.socket()
             if not sock then
                 return
             end
-        kong.request.init_body(128 * 1024)
+        request.init_body(128 * 1024)
         sock:settimeout(0)
         local content_length = nil
         content_length = tonumber(headers['content-length'])
@@ -279,14 +278,14 @@ local function waf_post_check( check_post )
         end
         local size = 0
         while size < content_length do
-        	local data, err, partial = sock:receive(chunk_size)
+          local data, err, partial = sock:receive(chunk_size)
             data = data or partial
 
             if not data then
                 return
             end
 
-            kong.request.append_body(data)
+            request.append_body(data)
             if waf_body_check(data) then
                 return true
             end
@@ -313,10 +312,9 @@ local function waf_post_check( check_post )
                 chunk_size = less
             end
          end
-         kong.request.finish_body()
+         request.finish_body()
         else
-            --kong.request.get_body_data()
-            local args = kong.request.get_body()
+            local args = request.get_body()
             if not args then
                 return
             end
@@ -337,6 +335,8 @@ local function waf_post_check( check_post )
             end
         end
     end
+  end
+  return false
 end
 
 -- 定义waf检测入口函数
@@ -403,7 +403,8 @@ function KongWaf:access(conf)
   end
 
   kong.log.info("start init waf")
-  headers = kong.request.get_headers()
+  request=kong.request
+  headers = request.get_headers()
   logpath=conf.logdir
   attacklog=optionIsOn(conf.attacklog)
   black_fileExt=waf_conf_set(conf.black_fileExt)
