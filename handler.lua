@@ -7,7 +7,7 @@ local FORBIDDEN = 403
 local cache = {}
 
 
-local request = "" -- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
+local request = nil -- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
 local ngx = ngx
 local kong = kong
 local pairs = pairs
@@ -16,13 +16,13 @@ local ngxmatch = ngx.re.match
 local unescape = ngx.unescape_uri
 local headers = {}
 -- 定义waf规则变量
-local uarules = ""
-local ckrules = ""
-local urlrules = ""
-local argsrules = ""
-local postrules = ""
+local uarules = nil
+local ckrules = nil
+local urlrules = nil
+local argsrules = nil
+local postrules = nil
 
-local logpath=""
+local logpath=nil
 local attacklog = true
 local black_fileExt = {}
 
@@ -67,7 +67,8 @@ end
 local optionIsOn = function (options) return options == "on" and true or false end
 
 local function read_waf_rule(var)
-  file = io.open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
+  --file = io.open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
+  file = io.open('./wafconf/'..var,"r")
   if file==nil then
     return
   end
@@ -109,7 +110,7 @@ end
 
 local function waf_log_write(logfile,msg)
   --local fd = io.open(logfile,"ab")
-  local fd = io.open("/usr/local/kong/logs/sec.log","ab")
+  local fd = io.open("/usr/local/kong/logs/sec.log","a")
   if fd == nil then return end
   fd:write(msg)
   fd:flush()
@@ -320,10 +321,6 @@ function KongWaf:init_worker()
   end
   urlrules = read_waf_rule('url')
   argsrules = read_waf_rule('args')
-  --argsrules=read_waf_rule('args')
-  --uarules=read_waf_rule('user-agent')
-  --postrules=read_waf_rule('post')
-  --ckrules=read_waf_rule('cookie')
 end
 
 -- 构造插件访问逻辑, 判断黑白名单, WAF判断在这里实现
