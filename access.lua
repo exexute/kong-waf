@@ -4,8 +4,7 @@ local pairs = pairs
 local match = string.match
 local ngxmatch = ngx.re.match
 local unescape = ngx.unescape_uri
-local request = kong.request
-local headers = request.get_headers()
+local headers = kong.request.get_headers()
 -- 定义waf规则变量
 local urlrules=read_waf_rule('url')
 local argsrules=read_waf_rule('args')
@@ -163,7 +162,7 @@ end
 local function waf_args_check( ... )
 	-- body
 	for _,rule in pairs(argsrules) do
-    local args = request.get_query()
+    local args = kong.request.get_query()
     for key, val in pairs(args) do
       kong.log.err(key)
       kong.log.err(val)
@@ -224,7 +223,7 @@ local function waf_post_check( check_post )
   -- body
   if optionIsOn(check_post) then
     local content_length = tonumber(headers['content-length'])
-    local method = request.get_method()
+    local method = kong.request.get_method()
     if method == "POST" then
       body_raw = kong.request.get_raw_body()
       kong.log.err(body_raw)
