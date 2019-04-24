@@ -234,7 +234,6 @@ local function waf_cookie_check( cookie_check )
 	-- body
   local var = ngx.var
 	local ck = var.http_cookie
-  kong.log.err(ck)
   if optionIsOn(cookie_check) and ck then
     for _,rule in pairs(ckrules) do
       tb_rules = split_waf_rule(rule, '@@@')
@@ -262,11 +261,14 @@ end
 -- 定义waf插件post请求检测函数
 local function waf_post_check( check_post )
   -- body
+  kong.log.err(check_post)
   if optionIsOn(check_post) then
     local content_length = tonumber(headers['content-length'])
     local method = request.get_method()
+    kong.log.err(method)
     if method == "POST" then
       body_raw = request.get_raw_body()
+      kong.log.err(body_raw)
       if body_raw then
         local form = ngx.decode_args(body_raw)
         if type(form) == "table" and next(form) then
