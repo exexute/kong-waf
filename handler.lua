@@ -234,7 +234,7 @@ local function waf_cookie_check( cookie_check )
 	-- body
   local var = ngx.var
 	local ck = var.http_cookie
-  kong.log.error(ck)
+  kong.log.err(ck)
   if optionIsOn(cookie_check) and ck then
     for _,rule in pairs(ckrules) do
       tb_rules = split_waf_rule(rule, '@@@')
