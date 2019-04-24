@@ -8,6 +8,9 @@ local cache = {}
 
 
 local request = "" -- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
+local ngx = ngx
+local kong = kong
+local pairs = pairs
 local match = string.match
 local ngxmatch = ngx.re.match
 local unescape = ngx.unescape_uri
@@ -261,79 +264,15 @@ local function waf_post_check( check_post )
     local content_length = tonumber(headers['content-length'])
     local method = request.get_method()
     if method == "POST" then
-        local boundary = waf_get_boundary()
-        if boundary then
-          local len = string.len
-            local sock, err = request.socket()
-            if not sock then
-                return
-            end
-        request.init_body(128 * 1024)
-        sock:settimeout(0)
-        local content_length = nil
-        content_length = tonumber(headers['content-length'])
-        local chunk_size = 4096
-        if content_length < chunk_size then
-            chunk_size = content_length
+      body_raw = request.get_raw_body()
+      if body_raw then
+        local form = ngx.decode_args(body_raw)
+        if type(form) == "table" and next(form) then
+          for name, value in pairs(form) do
+            waf_body_check(value)
+          end
         end
-        local size = 0
-        while size < content_length do
-          local data, err, partial = sock:receive(chunk_size)
-            data = data or partial
-
-            if not data then
-                return
-            end
-
-            request.append_body(data)
-            if waf_body_check(data) then
-                return true
-            end
-
-            size = size + len(data)
-            local m = ngx.re.match(data,[[Content-Disposition: form-data;(.+)filename="(.+)\\.(.*)"]],'ijo')
-            if m then
-                waf_ext_check(m[3])
-                filetranslate = true
-            else
-                if ngx.re.match(data,"Content-Disposition:",'isjo') then
-                    filetranslate = false
-                end
-
-                if filetranslate==false then
-                    if waf_body_check(data) then
-                        return true
-                    end
-                end
-            end
-
-            local less = content_length - size
-            if less < chunk_size then
-                chunk_size = less
-            end
-         end
-         request.finish_body()
-        else
-            local args = request.get_body()
-            if not args then
-                return
-            end
-
-            for key, val in pairs(args) do
-                if type(val) == "table" then
-                    if type(val[1]) == "boolean" then
-                        return
-                    end
-                    data=table.concat(val, ", ")
-                else
-                    data=val
-                end
-
-                if data and type(data) ~= "boolean" and waf_body_check(data) then
-                    waf_body_check(key)
-                end
-            end
-        end
+      end
     end
   end
   return false
