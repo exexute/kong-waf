@@ -274,6 +274,7 @@ local function waf_post_check( check_post )
             post_status = waf_body_check(value)
             if post_status then
               return true
+            end
           end
         end
       end
