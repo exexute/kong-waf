@@ -67,7 +67,6 @@ end
 local optionIsOn = function (options) return options == "on" and true or false end
 
 local function read_waf_rule(var)
-  kong.log.err("open rule")
   file = io.open('/usr/local/share/lua/5.1/kong/plugins/kong-waf/wafconf/'..var,"r")
   if file==nil then
     return
@@ -174,6 +173,7 @@ end
 
 -- 定义waf插件url检测函数
 local function waf_url_check(urldeny)
+  kong.log.err("enter url check")
   if optionIsOn(urldeny) then
     for _,rule in pairs(urlrules) do
       tb_rules = split_waf_rule(rule, '@@@')
@@ -189,6 +189,7 @@ end
 -- 定义waf插件user-agent检测函数
 local function waf_ua_check( ... )
 	-- body
+  kong.log.err("enter ua check")
   local ua = ngx.var.http_user_agent
   if ua ~= nil then
     for _,rule in pairs(argsrules) do
@@ -205,6 +206,7 @@ end
 -- 定义waf插件get参数检测函数
 local function waf_args_check( ... )
 	-- body
+  kong.log.err("enter args check")
 	for _,rule in pairs(argsrules) do
     local args = request.get_query()
     for key, val in pairs(args) do
@@ -234,6 +236,7 @@ end
 -- 定义waf插件cookie参数检测函数
 local function waf_cookie_check( cookie_check )
 	-- body
+  kong.log.err("enter cookie check")
 	local ck = ngx.var.http_cookie
   kong.log.err(ck)
   if optionIsOn(cookie_check) and ck then
@@ -250,6 +253,7 @@ end
 
 local function waf_body_check( data )
 	-- body
+  kong.log.err("enter body check")
 	for _,rule in pairs(argsrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
 		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
@@ -263,6 +267,7 @@ end
 -- 定义waf插件post请求检测函数
 local function waf_post_check( check_post )
   -- body
+  kong.log.err("enter post check")
   local post_status = nil
   if optionIsOn(check_post) then
     local content_length = tonumber(headers['content-length'])
