@@ -350,6 +350,7 @@ function KongWaf:access(conf)
 
   request=kong.request
   headers = request.get_headers()
+  logpath = conf.logdir
   black_fileExt=waf_conf_set(conf.black_fileExt)
   attacked=waf(conf)
   if optionIsOn(conf.urldeny) and attacked then
