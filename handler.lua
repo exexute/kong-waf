@@ -1,6 +1,6 @@
 local BasePlugin = require "kong.plugins.base_plugin"
 local iputils = require "resty.iputils"
-local access = require "kong.plugins.kong-waf.access"
+local access = require "access"
 
 local FORBIDDEN = 403
 
