@@ -131,7 +131,7 @@ local function waf_log(method, url, data, ruletag)
     end
 
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
-    print(filename)
+    kong.log.err(filename)
     waf_log_write(filename,line)
   end
 end
@@ -176,7 +176,7 @@ local function waf_url_check(urldeny)
   if optionIsOn(urldeny) then
     for _,rule in pairs(urlrules) do
       tb_rules = split_waf_rule(rule, '@@@')
-      if rule ~="" and ngx.re.match(ngx.var.request_uri,tb_rules[2],"isjo") then
+      if rule ~="" and ngxmatch(ngx.var.request_uri,tb_rules[2],"isjo") then
         waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
         return true
       end
@@ -192,7 +192,7 @@ local function waf_ua_check( ... )
   if ua ~= nil then
     for _,rule in pairs(argsrules) do
       tb_rules = split_waf_rule(rule, '@@@')
-      if rule ~="" and ngx.re.match(ua,tb_rules[2],"isjo") then
+      if rule ~="" and ngxmatch(ua,tb_rules[2],"isjo") then
         waf_log('UA',ngx.var.request_uri,"-",tb_rules[1])
         return true
       end
@@ -221,7 +221,7 @@ local function waf_args_check( ... )
         data=val
       end
       tb_rules = split_waf_rule(rule, '@@@')
-      if data and type(data) ~= "boolean" and rule ~="" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
+      if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
         waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
         return true
       end
@@ -235,23 +235,23 @@ local function waf_cookie_check( cookie_check )
 	-- body
 	local ck = ngx.var.http_cookie
   kong.log.err(ck)
-    if optionIsOn(cookie_check) and ck then
-        for _,rule in pairs(argsrules) do
-            tb_rules = split_waf_rule(rule, '@@@')
-            if rule ~="" and ngx.re.match(ck,tb_rules[2],"isjo") then
-                waf_log('Cookie',ngx.var.request_uri,"-",tb_rules[1])
-            	return true
-            end
-        end
+  if optionIsOn(cookie_check) and ck then
+    for _,rule in pairs(argsrules) do
+      tb_rules = split_waf_rule(rule, '@@@')
+      if rule ~="" and ngxmatch(ck,tb_rules[2],"isjo") then
+        waf_log('Cookie',ngx.var.request_uri,"-",tb_rules[1])
+        return true
+      end
     end
-    return false
+  end
+  return false
 end
 
 local function waf_body_check( data )
 	-- body
 	for _,rule in pairs(argsrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
-		if rule ~= "" and data ~= "" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
+		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
 			waf_log( 'POST', ngx.var.request_uri, data, tb_rules[1] )
 			return true
     end
