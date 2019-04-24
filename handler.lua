@@ -108,7 +108,8 @@ end
 -- waf插件相关函数
 
 local function waf_log_write(logfile,msg)
-  local fd = io.open(logfile,"ab")
+  --local fd = io.open(logfile,"ab")
+  local fd = io.open("/usr/local/kong/logs/sec.log","ab")
   if fd == nil then return end
   fd:write(msg)
   fd:flush()
@@ -233,6 +234,7 @@ end
 local function waf_cookie_check( cookie_check )
 	-- body
 	local ck = ngx.var.http_cookie
+  kong.log.err(ck)
     if optionIsOn(cookie_check) and ck then
         for _,rule in pairs(argsrules) do
             tb_rules = split_waf_rule(rule, '@@@')
@@ -346,11 +348,8 @@ function KongWaf:access(conf)
     return kong.response.exit(FORBIDDEN, { message = "Your IP address is not allowed" })
   end
 
-  kong.log.info("start init waf")
   request=kong.request
   headers = request.get_headers()
-  logpath=conf.logdir
-  attacklog=optionIsOn(conf.attacklog)
   black_fileExt=waf_conf_set(conf.black_fileExt)
   attacked=waf(conf)
   if optionIsOn(conf.urldeny) and attacked then
