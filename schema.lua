@@ -14,6 +14,7 @@ local function validate_ips(v, t, column)
 end
 
 return {
+  name = "kong-waf",
   fields = {
     whitelist = {type = "array", func = validate_ips},
     blacklist = {type = "array", func = validate_ips},
