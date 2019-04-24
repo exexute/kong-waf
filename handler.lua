@@ -22,9 +22,10 @@ local urlrules = nil
 local argsrules = nil
 local postrules = nil
 
-local logpath=nil
+local logpath = nil
 local attacklog = true
 local black_fileExt = {}
+local uri = nil
 
 
 local KongWaf = BasePlugin:extend()
@@ -143,7 +144,7 @@ local function waf_ext_check(ext)
   if ext then
     for rule in pairs(items) do
       if ngx.re.find(ext,rule,"isjo") then
-      waf_log('POST',ngx.var.request_uri,"-","file attack with ext "..ext)
+      waf_log('POST', uri, "-", "file attack with ext "..ext)
         say_html()
       end
     end
@@ -174,11 +175,12 @@ end
 -- 定义waf插件url检测函数
 local function waf_url_check(urldeny)
   kong.log.err("enter url check")
+  kong.log.err(uri)
   if optionIsOn(urldeny) then
     for _,rule in pairs(urlrules) do
       tb_rules = split_waf_rule(rule, '@@@')
-      if rule ~="" and ngxmatch(ngx.var.request_uri,tb_rules[2],"isjo") then
-        waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
+      if rule ~="" and ngxmatch(uri,tb_rules[2],"isjo") then
+        waf_log('GET',uri,"-",tb_rules[1])
         return true
       end
     end
@@ -195,7 +197,7 @@ local function waf_ua_check( ... )
     for _,rule in pairs(argsrules) do
       tb_rules = split_waf_rule(rule, '@@@')
       if rule ~="" and ngxmatch(ua,tb_rules[2],"isjo") then
-        waf_log('UA',ngx.var.request_uri,"-",tb_rules[1])
+        waf_log('UA',uri,"-",tb_rules[1])
         return true
       end
     end
@@ -225,7 +227,7 @@ local function waf_args_check( ... )
       end
       tb_rules = split_waf_rule(rule, '@@@')
       if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
-        waf_log('GET',ngx.var.request_uri,"-",tb_rules[1])
+        waf_log('GET',uri,"-",tb_rules[1])
         return true
       end
     end
@@ -243,7 +245,7 @@ local function waf_cookie_check( cookie_check )
     for _,rule in pairs(argsrules) do
       tb_rules = split_waf_rule(rule, '@@@')
       if rule ~="" and ngxmatch(ck,tb_rules[2],"isjo") then
-        waf_log('Cookie',ngx.var.request_uri,"-",tb_rules[1])
+        waf_log('Cookie',uri,"-",tb_rules[1])
         return true
       end
     end
@@ -257,7 +259,7 @@ local function waf_body_check( data )
 	for _,rule in pairs(argsrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
 		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
-			waf_log( 'POST', ngx.var.request_uri, data, tb_rules[1] )
+			waf_log( 'POST', uri, data, tb_rules[1] )
 			return true
     end
   end
@@ -350,11 +352,12 @@ function KongWaf:access(conf)
     return kong.response.exit(FORBIDDEN, { message = "Your IP address is not allowed" })
   end
 
-  request=kong.request
+  uri = ngx.var.request_uri
+  request = kong.request
   headers = request.get_headers()
   logpath = conf.logdir
-  black_fileExt=waf_conf_set(conf.black_fileExt)
-  attacked=waf(conf)
+  black_fileExt = waf_conf_set(conf.black_fileExt)
+  attacked = waf(conf)
   if optionIsOn(conf.urldeny) and attacked then
   	return kong.response.exit(FORBIDDEN, { message = "Your request has attack data." })
   end
