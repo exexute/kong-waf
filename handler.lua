@@ -189,7 +189,7 @@ local function waf_ua_check( ... )
 	-- body
   local ua = ngx.var.http_user_agent
   if ua ~= nil then
-    for _,rule in pairs(uarules) do
+    for _,rule in pairs(argsrules) do
       tb_rules = split_waf_rule(rule, '@@@')
       if rule ~="" and ngx.re.match(ua,tb_rules[2],"isjo") then
         waf_log('UA',ngx.var.request_uri,"-",tb_rules[1])
@@ -234,7 +234,7 @@ local function waf_cookie_check( cookie_check )
 	-- body
 	local ck = ngx.var.http_cookie
     if optionIsOn(cookie_check) and ck then
-        for _,rule in pairs(ckrules) do
+        for _,rule in pairs(argsrules) do
             tb_rules = split_waf_rule(rule, '@@@')
             if rule ~="" and ngx.re.match(ck,tb_rules[2],"isjo") then
                 waf_log('Cookie',ngx.var.request_uri,"-",tb_rules[1])
@@ -247,7 +247,7 @@ end
 
 local function waf_body_check( data )
 	-- body
-	for _,rule in pairs(postrules) do
+	for _,rule in pairs(argsrules) do
 		tb_rules = split_waf_rule(rule, '@@@')
 		if rule ~= "" and data ~= "" and ngx.re.match(ngx.unescape_uri(data),tb_rules[2],"isjo") then
 			waf_log( 'POST', ngx.var.request_uri, data, tb_rules[1] )
@@ -270,7 +270,6 @@ local function waf_post_check( check_post )
         local form = ngx.decode_args(body_raw)
         if type(form) == "table" and next(form) then
           for name, value in pairs(form) do
-            kong.log.err(value)
             post_status = waf_body_check(value)
             if post_status then
               return true
@@ -317,11 +316,12 @@ function KongWaf:init_worker()
   if not ok then
     kong.log.err("could not enable lrucache: ", err)
   end
-  urlrules=read_waf_rule('url')
-  argsrules=read_waf_rule('args')
-  uarules=read_waf_rule('user-agent')
-  postrules=read_waf_rule('post')
-  ckrules=read_waf_rule('cookie')
+  urlrules = read_waf_rule('url')
+  argsrules = read_waf_rule('args')
+  --argsrules=read_waf_rule('args')
+  --uarules=read_waf_rule('user-agent')
+  --postrules=read_waf_rule('post')
+  --ckrules=read_waf_rule('cookie')
 end
 
 -- 构造插件访问逻辑, 判断黑白名单, WAF判断在这里实现
