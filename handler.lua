@@ -260,6 +260,7 @@ end
 -- 定义waf插件post请求检测函数
 local function waf_post_check( check_post )
   -- body
+  local post_status = nil
   if optionIsOn(check_post) then
     local content_length = tonumber(headers['content-length'])
     local method = request.get_method()
@@ -269,7 +270,10 @@ local function waf_post_check( check_post )
         local form = ngx.decode_args(body_raw)
         if type(form) == "table" and next(form) then
           for name, value in pairs(form) do
-            waf_body_check(value)
+            kong.log.err(value)
+            post_status = waf_body_check(value)
+            if post_status then
+              return true
           end
         end
       end
