@@ -206,8 +206,9 @@ local function waf_args_check( ... )
 	-- body
 	for _,rule in pairs(argsrules) do
     local args = request.get_query()
-    kong.log.err(args)
     for key, val in pairs(args) do
+      kong.log.err(key)
+      kong.log.err(val)
       if type(val)=='table' then
         local t={}
         for k,v in pairs(val) do
