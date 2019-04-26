@@ -346,14 +346,16 @@ function KongWaf:access(conf)
     return kong.response.exit(FORBIDDEN, { message = "Your IP address is not allowed" })
   end
 
-  uri = ngx.var.request_uri
-  request = kong.request
-  headers = request.get_headers()
-  logpath = conf.logdir
-  black_fileExt = waf_conf_set(conf.black_fileExt)
-  attacked = waf(conf)
-  if optionIsOn(conf.urldeny) and attacked then
-  	return kong.response.exit(FORBIDDEN, { message = "Your request has attack data." })
+  if optionIsOn(conf.openwaf) then
+    uri = ngx.var.request_uri
+    request = kong.request
+    headers = request.get_headers()
+    logpath = conf.logdir
+    black_fileExt = waf_conf_set(conf.black_fileExt)
+    attacked = waf(conf)
+    if optionIsOn(conf.urldeny) and attacked then
+      return kong.response.exit(FORBIDDEN, { message = "Your request has attack data." })
+    end
   end
 end
 

@@ -18,6 +18,7 @@ return {
   fields = {
     whitelist = {type = "array", func = validate_ips},
     blacklist = {type = "array", func = validate_ips},
+    openwaf = {type = "string", required = true},
     rulepath = {type = "path", required = true},
     attacklog = {type = "string", required = true},
     logdir = {type = "path", required = true},
