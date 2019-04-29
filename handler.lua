@@ -114,7 +114,13 @@ end
 local function waf_log(method, url, data, ruletag)
 	-- body
 	if attacklog then
-    local line = { ngx.var.binary_remote_addr, " [", ngx.localtime(), "] \"", method, " ", ngx.var.server_name, url, "\" \"", data, "\"  \"", ngx.var.http_user_agent, "\" \"", ruletag, "\"\"", ngx.var.http_cookie, "\"\n"}
+    local ua = ngx.var.http_user_agent
+    local line = nil
+    if ua then
+      line = { ngx.var.binary_remote_addr, " [", ngx.localtime(), "] \"", method, " ", ngx.var.server_name, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\"\"", ngx.var.http_cookie, "\"\n"}
+    else
+      line = { ngx.var.binary_remote_addr, " [", ngx.localtime(), "] \"", method, " ", ngx.var.server_name, url, "\" \"", data, "\"  \"", ruletag, "\"\"", ngx.var.http_cookie, "\"\n"}
+    end
     kong.log.err( table.concat(line, " ") )
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
     waf_log_write( filename, table.concat(line, " ") )
