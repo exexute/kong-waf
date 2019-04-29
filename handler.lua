@@ -82,11 +82,13 @@ local function read_waf_rule(var)
     return
   end
   local i = 1
-  local nFindLastIndex = 1
+  local nFindLastIndex = nil
   for line in file:lines() do
     nFindLastIndex = sfind(line, "@@@", 1)
-    rules_array[i] = {ssub(line, 1, nFindLastIndex - 1), ssub(line, nFindLastIndex + 3, slen(line))}
-    i = i + 1
+    if nFindLastIndex then
+      rules_array[i] = {ssub(line, 1, nFindLastIndex - 1), ssub(line, nFindLastIndex + 3, slen(line))}
+      i = i + 1
+    end
   end
   file:close()
 end
