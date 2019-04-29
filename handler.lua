@@ -120,12 +120,20 @@ local function waf_log(method, url, data, ruletag)
     local time = ngx.localtime()
     local line = nil
 
-    if ua  then
+    if ua then
       line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\"\n" }
     else
       line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"\n" }
     end
-    kong.log.err(line)
+    kong.log.err(line[0])
+    kong.log.err(realIp)
+    kong.log.err(time)
+    kong.log.err(method)
+    kong.log.err(servername)
+    kong.log.err(url)
+    kong.log.err(data)
+    kong.log.err(ruletag)
+    kong.log.err(ua)
     kong.log.err( table.concat(line, " ") )
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
     waf_log_write( filename, table.concat(line, " ") )
