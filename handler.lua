@@ -94,15 +94,7 @@ local function read_waf_rule(var)
   file:close()
 end
 
--- 定义插件配置set函数
-local function waf_conf_set( list )
-  -- body
-  local set = {}
-  for _, l in ipairs(list) do set[l] = true end
-  return set
-end
 -- waf插件相关函数
-
 local function waf_log_write( logfile, msg )
   local fd = io.open(logfile,"ab")
   if fd == nil then return end
@@ -136,11 +128,16 @@ local function waf_log(method, url, data, ruletag)
   end
 end
 
+local function kong_log( method, url, data, ruletag )
+  -- body
+  kong.log.err(table.concat({binary_remote_addr, method, ruletag}))
+end
+
 -- 定义waf插件url检测函数
 local function waf_url_check( ... )
   for i = 1, #rules_array do
     if rule ~="" and ngxmatch(uri,rules_array[i][2],"isjo") then
-      waf_log('UA',uri,"-",rules_array[i][1])
+      --waf_log('UA',uri,"-",rules_array[i][1])
       return true
     end
   end
@@ -154,7 +151,7 @@ local function waf_ua_check( ... )
   if ua ~= nil then
     for i = 2, #rules_array do
       if rule ~="" and ngxmatch(ua,rules_array[i][2],"isjo") then
-        waf_log('UA',uri,"-",rules_array[i][1])
+        kong_log('UA',uri,"-",rules_array[i][1])
         return true
       end
     end
@@ -181,7 +178,7 @@ local function waf_args_check( ... )
         data=val
       end
       if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
-        waf_log('GET',uri,"-",rules_array[i][1])
+        kong_log('GET',uri,"-",rules_array[i][1])
         return true
       end
     end
@@ -196,7 +193,8 @@ local function waf_cookie_check( ... )
   if ck then
     for i = 2, #rules_array do
       if rule ~="" and ngxmatch(ck,rules_array[i][2],"isjo") then
-        waf_log('Cookie',uri,"-",rules_array[i][1])
+        kong.log.err()
+        kong_log('Cookie',uri,"-",rules_array[i][1])
         return true
       end
     end
@@ -208,7 +206,7 @@ local function waf_body_check( data )
 	-- body
 	for i = 2, #rules_array do
 		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
-			waf_log( 'POST', uri, data, rules_array[i][1] )
+			kong_log( 'POST', uri, data, rules_array[i][1] )
 			return true
     end
   end
