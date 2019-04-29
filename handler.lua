@@ -96,7 +96,7 @@ end
 
 -- waf插件相关函数
 local function waf_log_write( logfile, msg )
-  local fd = io.open(logfile,"ab")
+  local fd = open(logfile, "ab")
   if fd == nil then return end
   kong.log.err(msg)
   fd:write(msg)
