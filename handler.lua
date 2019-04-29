@@ -30,7 +30,7 @@ local ckrules = nil
 local urlrules = nil
 local argsrules = nil
 local postrules = nil
-local rules_array = nil
+local rules_array = {}
 
 local logpath = nil
 local attacklog = true
