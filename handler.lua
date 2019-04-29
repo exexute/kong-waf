@@ -301,7 +301,7 @@ function KongWaf:access(conf)
   end
 
   if optionIsOn(conf.openwaf) then
-    uri = ngx.var.request_uri
+    uri = unescape(unescape(ngx.var.request_uri))
     request = kong.request
     headers = request.get_headers()
     logpath = conf.logdir
