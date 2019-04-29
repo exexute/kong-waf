@@ -193,8 +193,8 @@ local function waf_cookie_check( cookie_check )
     local ck = ngx.var.http_cookie
     if ck then
       for i = 2, #rules_array do
-        if rule ~="" and ngxmatch(ck,tb_rules[2],"isjo") then
-          waf_log('Cookie',uri,"-",tb_rules[1])
+        if rule ~="" and ngxmatch(ck,rules_array[i][2],"isjo") then
+          waf_log('Cookie',uri,"-",rules_array[i][1])
           return true
         end
       end
