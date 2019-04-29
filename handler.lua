@@ -104,7 +104,7 @@ local function waf_log_write( logfile, msg )
   fd:close()
 end
 
-local function waf_log(method, url, data, ruletag)
+local function kong_log(method, url, data, ruletag)
 	-- body
 	if attacklog then
     local ua = ngx.var.http_user_agent
@@ -122,15 +122,9 @@ local function waf_log(method, url, data, ruletag)
     else
       line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"\n"}
     end
-    kong.log.err( table.concat(line, " ") )
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
     waf_log_write( filename, table.concat(line, " ") )
   end
-end
-
-local function kong_log( method, url, data, ruletag )
-  -- body
-  kong.log.err(table.concat({binary_remote_addr, method, ruletag}))
 end
 
 -- 定义waf插件url检测函数
@@ -243,8 +237,8 @@ local function waf( conf )
     ngx.exit(444)
   elseif ngx.var.http_X_Scan_Memo then
     ngx.exit(444)
-  elseif optionIsOn(conf.urlmatch) and waf_url_check() then
-    return true
+  --elseif optionIsOn(conf.urlmatch) and waf_url_check() then
+    --return true
   elseif optionIsOn(conf.argsmatch) and waf_args_check() then
     return true
   elseif optionIsOn(conf.postmatch) and waf_post_check() then
@@ -271,6 +265,7 @@ function KongWaf:init_worker()
     kong.log.err("could not enable lrucache: ", err)
   end
   read_waf_rule('args')
+  waf_log_write("/opt/data/kong/logs/kong-waf.log", "error")
 end
 
 -- 构造插件访问逻辑, 判断黑白名单, WAF判断在这里实现
