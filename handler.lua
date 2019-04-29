@@ -117,14 +117,13 @@ local function waf_log(method, url, data, ruletag)
     local realIp = ngx.var.binary_remote_addr
     local ua = ngx.var.http_user_agent
     local servername = ngx.var.server_name
-    local cookie = ngx.var.http_cookie
     local time = ngx.localtime()
     local line = nil
 
     if ua  then
-      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\" \"", cookie, "\"\n"}
+      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\"\n"}
     else
-      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\" \"", cookie, "\"\n"}
+      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"\n"}
     end
     kong.log.err( table.concat(line, " ") )
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
