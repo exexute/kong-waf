@@ -135,9 +135,11 @@ end
 -- 定义waf插件url检测函数
 local function waf_url_check( urlmatch )
   if optionIsOn(urlmatch) then
-    if rule ~="" and ngxmatch(uri,rules_array[1][2],"isjo") then
-      waf_log('GET',uri,"-",rules_array[1][1])
-      return true
+    for i = 2, #rules_array do
+      if rule ~="" and ngxmatch(uri,rules_array[1][2],"isjo") then
+        waf_log('UA',uri,"-",rules_array[i][1])
+        return true
+      end
     end
   end
   return false
