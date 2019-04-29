@@ -122,7 +122,7 @@ local function waf_log(method, url, data, ruletag)
     local line = nil
 
     if ua  then
-      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, , "\" \"", cookie, "\"\n"}
+      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\" \"", cookie, "\"\n"}
     else
       line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"  \"", cookie, "\"\n"}
     end
