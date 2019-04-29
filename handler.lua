@@ -17,6 +17,10 @@ local table = table
 local pairs = pairs
 local lower = string.lower
 local match = string.match
+local sfind = string.find
+local ssub = string.sub
+local slen = string.len
+local s
 local open = io.open
 
 local headers = {}
@@ -26,10 +30,10 @@ local ckrules = nil
 local urlrules = nil
 local argsrules = nil
 local postrules = nil
+local rules_array = nil
 
 local logpath = nil
 local attacklog = true
-local black_fileExt = {}
 local uri = nil
 
 
@@ -77,31 +81,14 @@ local function read_waf_rule(var)
   if file==nil then
     return
   end
-  local t = {}
-
+  local i = 1
+  local nFindLastIndex = 1
   for line in file:lines() do
-    table.insert(t,line)
+    nFindLastIndex = sfind(line, "@@@", 1)
+    rules_array[i] = {ssub(line, 1, nFindLastIndex - 1), ssub(line, nFindLastIndex + 3, slen(line))}
+    i = i + 1
   end
   file:close()
-  return(t)
-end
-
--- 定义插件规则拆分函数
-local function split_waf_rule(rule_string, rule_separator)
-  local nFindStartIndex = 1
-  local nSplitIndex = 1
-  local nSplitArray = {}
-  while true do
-    local nFindLastIndex = string.find(rule_string, rule_separator, nFindStartIndex)
-    if not nFindLastIndex then
-      nSplitArray[nSplitIndex] = string.sub(rule_string, nFindStartIndex, string.len(rule_string))
-      break
-    end
-    nSplitArray[nSplitIndex] = string.sub(rule_string, nFindStartIndex, nFindLastIndex - 1)
-    nFindStartIndex = nFindLastIndex + string.len(rule_separator)
-    nSplitIndex = nSplitIndex + 1
-  end
-  return nSplitArray
 end
 
 -- 定义插件配置set函数
@@ -116,6 +103,7 @@ end
 local function waf_log_write( logfile, msg )
   local fd = io.open(logfile,"ab")
   if fd == nil then return end
+  kong.log.err(msg)
   fd:write(msg)
   fd:flush()
   fd:close()
@@ -128,77 +116,41 @@ local function waf_log(method, url, data, ruletag)
     local ua = ngx.var.http_user_agent
     local servername = ngx.var.server_name
     local time = ngx.localtime()
+    local line = nil
 
     if ua  then
-      local line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\"  \""..ua.."\" \""..ruletag.."\"\n"
+      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\"\n"}
     else
-      local line = realIp.." ["..time.."] \""..method.." "..servername..url.."\" \""..data.."\" - \""..ruletag.."\"\n"
+      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"\n"}
     end
-
+    kong.log.err( table.concat(line, " ") )
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
-    kong.log.err( filename )
-    waf_log_write( filename, line )
+    waf_log_write( filename, table.concat(line, " ") )
   end
-end
-
--- 定义插件后缀检测函数
-local function waf_ext_check(ext)
-  local items = waf_conf_set(black_fileExt)
-  local ext = lower(ext)
-  if ext then
-    for rule in pairs(items) do
-      if ngx.re.find(ext,rule,"isjo") then
-        waf_log('POST', uri, "-", "file attack with ext "..ext)
-      end
-    end
-  end
-  return false
-end
-
-
-local function waf_get_boundary( ... )
-	-- body
-	local header = headers["content-type"]
-    if not header then
-        return nil
-    end
-
-    if type(header) == "table" then
-        header = header[1]
-    end
-
-    local m = match(header, ";%s*boundary=\"([^\"]+)\"")
-    if m then
-        return m
-    end
-
-    return match(header, ";%s*boundary=([^\",;]+)")
 end
 
 -- 定义waf插件url检测函数
-local function waf_url_check(urldeny)
-  if optionIsOn(urldeny) then
-    for _,rule in pairs(urlrules) do
-      tb_rules = split_waf_rule(rule, '@@@')
-      if rule ~="" and ngxmatch(uri,tb_rules[2],"isjo") then
-        waf_log('GET',uri,"-",tb_rules[1])
-        return true
-      end
+local function waf_url_check( urlmatch )
+  if optionIsOn(urlmatch) then
+    if rule ~="" and ngxmatch(uri,rules_array[1][2],"isjo") then
+      waf_log('GET',uri,"-",rules_array[1][1])
+      return true
     end
   end
   return false
 end
 
 -- 定义waf插件user-agent检测函数
-local function waf_ua_check( ... )
+local function waf_ua_check( uamatch )
 	-- body
-  local ua = ngx.var.http_user_agent
-  if ua ~= nil then
-    for _,rule in pairs(argsrules) do
-      tb_rules = split_waf_rule(rule, '@@@')
-      if rule ~="" and ngxmatch(ua,tb_rules[2],"isjo") then
-        waf_log('UA',uri,"-",tb_rules[1])
-        return true
+  if optionIsOn(uamatch) then
+    local ua = ngx.var.http_user_agent
+    if ua ~= nil then
+      for i = 2, #rules_array do
+        if rule ~="" and ngxmatch(ua,rules_array[i][2],"isjo") then
+          waf_log('UA',uri,"-",rules_array[i][1])
+          return true
+        end
       end
     end
   end
@@ -206,27 +158,28 @@ local function waf_ua_check( ... )
 end
 
 -- 定义waf插件get参数检测函数
-local function waf_args_check( ... )
+local function waf_args_check( argsmatch )
 	-- body
-	for _,rule in pairs(argsrules) do
-    local args = request.get_query()
-    for key, val in pairs(args) do
-      if type(val)=='table' then
-        local t={}
-        for k,v in pairs(val) do
-          if v == true then
-            v=""
+  if optionIsOn(argsmatch) then
+  	for i = 2, #rules_array do
+      local args = request.get_query()
+      for key, val in pairs(args) do
+        if type(val)=='table' then
+          local t={}
+          for k,v in pairs(val) do
+            if v == true then
+              v=""
+            end
+            table.insert(t,v)
           end
-          table.insert(t,v)
+          data=table.concat(t, " ")
+        else
+          data=val
         end
-        data=table.concat(t, " ")
-      else
-        data=val
-      end
-      tb_rules = split_waf_rule(rule, '@@@')
-      if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
-        waf_log('GET',uri,"-",tb_rules[1])
-        return true
+        if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
+          waf_log('GET',uri,"-",rules_array[i][1])
+          return true
+        end
       end
     end
   end
@@ -236,13 +189,14 @@ end
 -- 定义waf插件cookie参数检测函数
 local function waf_cookie_check( cookie_check )
 	-- body
-	local ck = ngx.var.http_cookie
-  if optionIsOn(cookie_check) and ck then
-    for _,rule in pairs(argsrules) do
-      tb_rules = split_waf_rule(rule, '@@@')
-      if rule ~="" and ngxmatch(ck,tb_rules[2],"isjo") then
-        waf_log('Cookie',uri,"-",tb_rules[1])
-        return true
+  if optionIsOn(cookie_check) then
+    local ck = ngx.var.http_cookie
+    if ck then
+      for i = 2, #rules_array do
+        if rule ~="" and ngxmatch(ck,tb_rules[2],"isjo") then
+          waf_log('Cookie',uri,"-",tb_rules[1])
+          return true
+        end
       end
     end
   end
@@ -251,10 +205,9 @@ end
 
 local function waf_body_check( data )
 	-- body
-	for _,rule in pairs(argsrules) do
-		tb_rules = split_waf_rule(rule, '@@@')
-		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),tb_rules[2],"isjo") then
-			waf_log( 'POST', uri, data, tb_rules[1] )
+	for i = 2, #rules_array do
+		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
+			waf_log( 'POST', uri, data, rules_array[i][1] )
 			return true
     end
   end
@@ -293,13 +246,13 @@ local function waf( conf )
     ngx.exit(444)
   elseif ngx.var.http_X_Scan_Memo then
     ngx.exit(444)
-  elseif waf_url_check(conf.urldeny) then
+  elseif waf_url_check(conf.urlmatch) then
     return true
-  elseif waf_args_check() then
+  elseif waf_args_check(conf.argsmatch) then
     return true
   elseif waf_post_check(conf.postmatch) then
     return true
-  elseif waf_ua_check() then
+  elseif waf_ua_check(conf.uamatch) then
     return true
   elseif waf_cookie_check(conf.cookiematch) then
     return true
@@ -320,8 +273,7 @@ function KongWaf:init_worker()
   if not ok then
     kong.log.err("could not enable lrucache: ", err)
   end
-  urlrules = read_waf_rule('url')
-  argsrules = read_waf_rule('args')
+  read_waf_rule('args')
 end
 
 -- 构造插件访问逻辑, 判断黑白名单, WAF判断在这里实现
@@ -351,7 +303,6 @@ function KongWaf:access(conf)
     request = kong.request
     headers = request.get_headers()
     logpath = conf.logdir
-    black_fileExt = waf_conf_set(conf.black_fileExt)
     attacked = waf(conf)
     if optionIsOn(conf.urldeny) and attacked then
       return kong.response.exit(FORBIDDEN, { message = "Your request has attack data." })
