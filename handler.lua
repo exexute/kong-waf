@@ -103,9 +103,9 @@ end
 -- waf插件相关函数
 
 local function waf_log_write( logfile, msg )
-  kong.log.err(msg)
   local fd = io.open(logfile,"ab")
   if fd == nil then return end
+  kong.log.err(msg)
   fd:write(msg)
   fd:flush()
   fd:close()
@@ -114,12 +114,17 @@ end
 local function waf_log(method, url, data, ruletag)
 	-- body
 	if attacklog then
+    local realIp = ngx.var.binary_remote_addr
     local ua = ngx.var.http_user_agent
+    local servername = ngx.var.server_name
+    local cookie = ngx.var.http_cookie
+    local time = ngx.localtime()
     local line = nil
-    if ua then
-      line = { ngx.var.binary_remote_addr, " [", ngx.localtime(), "] \"", method, " ", ngx.var.server_name, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\"\"", ngx.var.http_cookie, "\"\n"}
+
+    if ua  then
+      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\" \"", cookie, "\"\n"}
     else
-      line = { ngx.var.binary_remote_addr, " [", ngx.localtime(), "] \"", method, " ", ngx.var.server_name, url, "\" \"", data, "\"  \"", ruletag, "\"\"", ngx.var.http_cookie, "\"\n"}
+      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\" \"", cookie, "\"\n"}
     end
     kong.log.err( table.concat(line, " ") )
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
