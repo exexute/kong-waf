@@ -12,6 +12,7 @@ local ngx = ngx
 local kong = kong
 local ngxmatch = ngx.re.match
 local unescape = ngx.unescape_uri
+local binary_remote_addr = nil
 
 local table = table
 local pairs = pairs
@@ -114,17 +115,20 @@ end
 local function waf_log(method, url, data, ruletag)
 	-- body
 	if attacklog then
-    local realIp = ngx.var.binary_remote_addr
     local ua = ngx.var.http_user_agent
     local servername = ngx.var.server_name
     local cookie = ngx.var.http_cookie
     local time = ngx.localtime()
     local line = nil
 
-    if ua  then
-      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\" \"", cookie, "\"\n"}
+    if ua and cookie then
+      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\" \"", cookie, "\"\n"}
+    elseif ua then
+      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\"\n"}
+    elseif cookie then
+      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"  \"", cookie, "\"\n"}
     else
-      line = { realIp, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"  \"", cookie, "\"\n"}
+      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"\n"}
     end
     kong.log.err( table.concat(line, " ") )
     local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
@@ -285,7 +289,7 @@ end
 function KongWaf:access(conf)
   KongWaf.super.access(self)
   local block = false
-  local binary_remote_addr = ngx.var.binary_remote_addr-- 获取客户端真实IP地址
+  binary_remote_addr = ngx.var.binary_remote_addr-- 获取客户端真实IP地址
 
   if not binary_remote_addr then
     return kong.response.exit(FORBIDDEN, { message = "Cannot identify the client IP address, unix domain sockets are not supported." })
