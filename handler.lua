@@ -137,7 +137,7 @@ local function waf_log(method, url, data, ruletag)
 end
 
 -- 定义waf插件url检测函数
-local function waf_url_check( urlmatch )
+local function waf_url_check( ... )
   for i = 1, #rules_array do
     if rule ~="" and ngxmatch(uri,rules_array[i][2],"isjo") then
       waf_log('UA',uri,"-",rules_array[i][1])
@@ -148,7 +148,7 @@ local function waf_url_check( urlmatch )
 end
 
 -- 定义waf插件user-agent检测函数
-local function waf_ua_check( uamatch )
+local function waf_ua_check( ... )
 	-- body
   local ua = ngx.var.http_user_agent
   if ua ~= nil then
@@ -163,7 +163,7 @@ local function waf_ua_check( uamatch )
 end
 
 -- 定义waf插件get参数检测函数
-local function waf_args_check( argsmatch )
+local function waf_args_check( ... )
 	-- body
   for i = 2, #rules_array do
     local args = request.get_query()
@@ -190,7 +190,7 @@ local function waf_args_check( argsmatch )
 end
 
 -- 定义waf插件cookie参数检测函数
-local function waf_cookie_check( cookie_check )
+local function waf_cookie_check( ... )
 	-- body
   local ck = ngx.var.http_cookie
   if ck then
@@ -216,7 +216,7 @@ local function waf_body_check( data )
 end
 
 -- 定义waf插件post请求检测函数
-local function waf_post_check( check_post )
+local function waf_post_check( ... )
   -- body
   local post_status = nil
   local content_length = tonumber(headers['content-length'])
@@ -245,15 +245,15 @@ local function waf( conf )
     ngx.exit(444)
   elseif ngx.var.http_X_Scan_Memo then
     ngx.exit(444)
-  elseif optionIsOn(urlmatch) and waf_url_check(conf.urlmatch) then
+  elseif optionIsOn(conf.urlmatch) and waf_url_check() then
     return true
-  elseif optionIsOn(argsmatch) and waf_args_check(conf.argsmatch) then
+  elseif optionIsOn(conf.argsmatch) and waf_args_check() then
     return true
-  elseif optionIsOn(check_post) and waf_post_check(conf.postmatch) then
+  elseif optionIsOn(conf.postmatch) and waf_post_check() then
     return true
-  elseif optionIsOn(uamatch) and waf_ua_check(conf.uamatch) then
+  elseif optionIsOn(conf.uamatch) and waf_ua_check() then
     return true
-  elseif optionIsOn(cookie_check) and waf_cookie_check(conf.cookiematch) then
+  elseif optionIsOn(conf.cookiematch) and waf_cookie_check() then
     return true
   else
     return false
