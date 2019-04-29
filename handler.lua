@@ -138,12 +138,10 @@ end
 
 -- 定义waf插件url检测函数
 local function waf_url_check( urlmatch )
-  if optionIsOn(urlmatch) then
-    for i = 1, #rules_array do
-      if rule ~="" and ngxmatch(uri,rules_array[i][2],"isjo") then
-        waf_log('UA',uri,"-",rules_array[i][1])
-        return true
-      end
+  for i = 1, #rules_array do
+    if rule ~="" and ngxmatch(uri,rules_array[i][2],"isjo") then
+      waf_log('UA',uri,"-",rules_array[i][1])
+      return true
     end
   end
   return false
@@ -152,14 +150,12 @@ end
 -- 定义waf插件user-agent检测函数
 local function waf_ua_check( uamatch )
 	-- body
-  if optionIsOn(uamatch) then
-    local ua = ngx.var.http_user_agent
-    if ua ~= nil then
-      for i = 2, #rules_array do
-        if rule ~="" and ngxmatch(ua,rules_array[i][2],"isjo") then
-          waf_log('UA',uri,"-",rules_array[i][1])
-          return true
-        end
+  local ua = ngx.var.http_user_agent
+  if ua ~= nil then
+    for i = 2, #rules_array do
+      if rule ~="" and ngxmatch(ua,rules_array[i][2],"isjo") then
+        waf_log('UA',uri,"-",rules_array[i][1])
+        return true
       end
     end
   end
@@ -169,26 +165,24 @@ end
 -- 定义waf插件get参数检测函数
 local function waf_args_check( argsmatch )
 	-- body
-  if optionIsOn(argsmatch) then
-  	for i = 2, #rules_array do
-      local args = request.get_query()
-      for key, val in pairs(args) do
-        if type(val)=='table' then
-          local t={}
-          for k,v in pairs(val) do
-            if v == true then
-              v=""
-            end
-            table.insert(t,v)
+  for i = 2, #rules_array do
+    local args = request.get_query()
+    for key, val in pairs(args) do
+      if type(val)=='table' then
+        local t={}
+        for k,v in pairs(val) do
+          if v == true then
+            v=""
           end
-          data=table.concat(t, " ")
-        else
-          data=val
+          table.insert(t,v)
         end
-        if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
-          waf_log('GET',uri,"-",rules_array[i][1])
-          return true
-        end
+        data=table.concat(t, " ")
+      else
+        data=val
+      end
+      if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
+        waf_log('GET',uri,"-",rules_array[i][1])
+        return true
       end
     end
   end
@@ -198,14 +192,12 @@ end
 -- 定义waf插件cookie参数检测函数
 local function waf_cookie_check( cookie_check )
 	-- body
-  if optionIsOn(cookie_check) then
-    local ck = ngx.var.http_cookie
-    if ck then
-      for i = 2, #rules_array do
-        if rule ~="" and ngxmatch(ck,rules_array[i][2],"isjo") then
-          waf_log('Cookie',uri,"-",rules_array[i][1])
-          return true
-        end
+  local ck = ngx.var.http_cookie
+  if ck then
+    for i = 2, #rules_array do
+      if rule ~="" and ngxmatch(ck,rules_array[i][2],"isjo") then
+        waf_log('Cookie',uri,"-",rules_array[i][1])
+        return true
       end
     end
   end
@@ -227,19 +219,17 @@ end
 local function waf_post_check( check_post )
   -- body
   local post_status = nil
-  if optionIsOn(check_post) then
-    local content_length = tonumber(headers['content-length'])
-    local method = request.get_method()
-    if method == "POST" then
-      body_raw = request.get_raw_body()
-      if body_raw then
-        local form = ngx.decode_args(body_raw)
-        if type(form) == "table" and next(form) then
-          for name, value in pairs(form) do
-            post_status = waf_body_check(value)
-            if post_status then
-              return true
-            end
+  local content_length = tonumber(headers['content-length'])
+  local method = request.get_method()
+  if method == "POST" then
+    body_raw = request.get_raw_body()
+    if body_raw then
+      local form = ngx.decode_args(body_raw)
+      if type(form) == "table" and next(form) then
+        for name, value in pairs(form) do
+          post_status = waf_body_check(value)
+          if post_status then
+            return true
           end
         end
       end
@@ -255,15 +245,15 @@ local function waf( conf )
     ngx.exit(444)
   elseif ngx.var.http_X_Scan_Memo then
     ngx.exit(444)
-  elseif waf_url_check(conf.urlmatch) then
+  elseif optionIsOn(urlmatch) and waf_url_check(conf.urlmatch) then
     return true
-  elseif waf_args_check(conf.argsmatch) then
+  elseif optionIsOn(argsmatch) and waf_args_check(conf.argsmatch) then
     return true
-  elseif waf_post_check(conf.postmatch) then
+  elseif optionIsOn(check_post) and waf_post_check(conf.postmatch) then
     return true
-  elseif waf_ua_check(conf.uamatch) then
+  elseif optionIsOn(uamatch) and waf_ua_check(conf.uamatch) then
     return true
-  elseif waf_cookie_check(conf.cookiematch) then
+  elseif optionIsOn(cookie_check) and waf_cookie_check(conf.cookiematch) then
     return true
   else
     return false
