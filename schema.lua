@@ -23,9 +23,12 @@ return {
     attacklog = {type = "string", required = true},
     logdir = {type = "path", required = true},
     urldeny = {type = "string", required = true},
+    urlmatch = {type = "string", required = true},
+    argsmatch = {type = "string", required = true},
+    postmatch = {type = "string", required = true},
+    uamatch = {type = "string", required = true},
     Redirect = {type = "string", required = true},
     cookiematch = {type = "string", required = true},
-    postmatch = {type = "string", required = true},
     black_fileExt = {type = "array", elements = string}
   },
   self_check = function(schema, plugin_t, dao, is_update)
