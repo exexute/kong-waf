@@ -265,7 +265,6 @@ function KongWaf:init_worker()
     kong.log.err("could not enable lrucache: ", err)
   end
   read_waf_rule('args')
-  waf_log_write("/opt/data/kong/logs/kong-waf.log", "error")
 end
 
 -- 构造插件访问逻辑, 判断黑白名单, WAF判断在这里实现
