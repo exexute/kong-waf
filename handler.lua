@@ -126,7 +126,7 @@ local function kong_log(method, url, data, ruletag)
       line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'"}'
     end
     local filename = logpath.."/kong-waf-sec.log"
-    waf_log_write( filename, line )
+    waf_log_write( filename, line.."\n" )
   end
 end
 
