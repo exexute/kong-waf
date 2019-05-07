@@ -6,8 +6,8 @@ local FORBIDDEN = 403
 -- cache of parsed CIDR values
 local cache = {}
 
-
-local request = nil -- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
+-- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
+local request = nil
 local ngx = ngx
 local kong = kong
 local ngxmatch = ngx.re.match
@@ -36,6 +36,7 @@ local rules_array = {}
 local logpath = nil
 local attacklog = true
 local uri = nil
+local host = nil
 
 
 local KongWaf = BasePlugin:extend()
@@ -109,20 +110,23 @@ local function kong_log(method, url, data, ruletag)
     local ua = ngx.var.http_user_agent
     local servername = ngx.var.server_name
     local cookie = ngx.var.http_cookie
+    local host = ngx.var.host
+    local referer = ngx.var.http_referer
+    local client_addr = ngx.var.remote_addr
     local time = ngx.localtime()
     local line = nil
 
     if ua and cookie then
-      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\" \"", cookie, "\"\n"}
+      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\", \"user_agent\":\""+ua+"\", \"cookie\":\""+cookie+"\"}"
     elseif ua then
-      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ua, "\" \"", ruletag, "\"\n"}
+      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\", \"user_agent\":\""+ua+"\"}"
     elseif cookie then
-      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"  \"", cookie, "\"\n"}
+      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\", \"cookie\":\""+cookie+"\"}"
     else
-      line = { binary_remote_addr, " [", time, "] \"", method, " ", servername, url, "\" \"", data, "\"  \"", ruletag, "\"\n"}
+      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\"}"
     end
-    local filename = logpath..'/'..servername.."_"..ngx.today().."_sec.log"
-    waf_log_write( filename, table.concat(line, " ") )
+    local filename = logpath.."/kong-waf-sec.log"
+    waf_log_write( filename, line )
   end
 end
 
