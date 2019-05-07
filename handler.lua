@@ -109,7 +109,6 @@ local function kong_log(pos, ruletag)
 	if attacklog then
     local ua = ngx.var.http_user_agent
     local servername = ngx.var.server_name
-    local cookie = ngx.var.http_cookie
     local host = ngx.var.host
     local referer = ngx.var.http_referer
     local client_addr = ngx.var.remote_addr
@@ -117,12 +116,8 @@ local function kong_log(pos, ruletag)
     local time = ngx.localtime()
     local line = nil
 
-    if ua and cookie then
-      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'", "user_agent":"'..ua..'", "cookie":"'..cookie..'"}'
-    elseif ua then
+    if ua then
       line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'", "user_agent":"'..ua..'"}'
-    elseif cookie then
-      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'", "cookie":"'..cookie..'"}'
     else
       line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'"}'
     end
