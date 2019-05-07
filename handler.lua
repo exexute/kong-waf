@@ -117,13 +117,13 @@ local function kong_log(method, url, data, ruletag)
     local line = nil
 
     if ua and cookie then
-      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\", \"user_agent\":\""+ua+"\", \"cookie\":\""+cookie+"\"}"
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'", "user_agent":"'..ua..'", "cookie":"'..cookie..'"}'
     elseif ua then
-      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\", \"user_agent\":\""+ua+"\"}"
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'", "user_agent":"'..ua..'"}'
     elseif cookie then
-      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\", \"cookie\":\""+cookie+"\"}"
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'", "cookie":"'..cookie..'"}'
     else
-      line = "{\"ip\":\""+client_addr+"\", \"date_time\":\""+time+"\", \"securitytype\":\""+ruletag+"\", \"method\":\""+method+"\", \"uri\":\""+url+"\"}"
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'"}'
     end
     local filename = logpath.."/kong-waf-sec.log"
     waf_log_write( filename, line )
