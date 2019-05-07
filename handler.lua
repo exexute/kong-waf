@@ -104,7 +104,7 @@ local function waf_log_write( logfile, msg )
   fd:close()
 end
 
-local function kong_log(method, url, data, ruletag)
+local function kong_log(pos, ruletag)
 	-- body
 	if attacklog then
     local ua = ngx.var.http_user_agent
@@ -113,17 +113,18 @@ local function kong_log(method, url, data, ruletag)
     local host = ngx.var.host
     local referer = ngx.var.http_referer
     local client_addr = ngx.var.remote_addr
+    local method = ngx.var.request_method
     local time = ngx.localtime()
     local line = nil
 
     if ua and cookie then
-      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'", "user_agent":"'..ua..'", "cookie":"'..cookie..'"}'
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'", "user_agent":"'..ua..'", "cookie":"'..cookie..'"}'
     elseif ua then
-      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'", "user_agent":"'..ua..'"}'
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'", "user_agent":"'..ua..'"}'
     elseif cookie then
-      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'", "cookie":"'..cookie..'"}'
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'", "cookie":"'..cookie..'"}'
     else
-      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "method":"'..method..'", "uri":"'..url..'"}'
+      line = '{"ip":"'..client_addr..'", "date_time":"'..time..'", "securitytype":"'..ruletag..'", "pos":"'..pos..'", "method":"'..method..'", "uri":"'..uri..'"}'
     end
     local filename = logpath.."/kong-waf-sec.log"
     waf_log_write( filename, line.."\n" )
@@ -134,7 +135,7 @@ end
 local function waf_url_check( ... )
   for i = 1, #rules_array do
     if rule ~="" and ngxmatch(uri,rules_array[i][2],"isjo") then
-      --waf_log('UA',uri,"-",rules_array[i][1])
+      waf_log('uri', rules_array[i][1])
       return true
     end
   end
@@ -148,7 +149,7 @@ local function waf_ua_check( ... )
   if ua ~= nil then
     for i = 2, #rules_array do
       if rule ~="" and ngxmatch(ua,rules_array[i][2],"isjo") then
-        kong_log('UA',uri,"-",rules_array[i][1])
+        kong_log('User-Agent', rules_array[i][1])
         return true
       end
     end
@@ -175,7 +176,7 @@ local function waf_args_check( ... )
         data=val
       end
       if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
-        kong_log('GET',uri,"-",rules_array[i][1])
+        kong_log('args', rules_array[i][1])
         return true
       end
     end
@@ -190,7 +191,7 @@ local function waf_cookie_check( ... )
   if ck then
     for i = 2, #rules_array do
       if rule ~="" and ngxmatch(ck,rules_array[i][2],"isjo") then
-        kong_log('Cookie',uri,"-",rules_array[i][1])
+        kong_log('cookie', rules_array[i][1])
         return true
       end
     end
@@ -202,7 +203,7 @@ local function waf_body_check( data )
 	-- body
 	for i = 2, #rules_array do
 		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
-			kong_log( 'POST', uri, data, rules_array[i][1] )
+			kong_log( 'body', rules_array[i][1] )
 			return true
     end
   end
@@ -239,8 +240,8 @@ local function waf( conf )
     ngx.exit(444)
   elseif ngx.var.http_X_Scan_Memo then
     ngx.exit(444)
-  --elseif optionIsOn(conf.urlmatch) and waf_url_check() then
-    --return true
+  elseif optionIsOn(conf.urlmatch) and waf_url_check() then
+    return true
   elseif optionIsOn(conf.argsmatch) and waf_args_check() then
     return true
   elseif optionIsOn(conf.postmatch) and waf_post_check() then
