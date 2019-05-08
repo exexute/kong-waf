@@ -157,7 +157,8 @@ end
 
 -- 定义waf插件get参数检测函数
 local function waf_args_check( ... )
-	-- body
+  -- body
+  kong.log.err("enter args check")
   for i = 2, #rules_array do
     local args = request.get_query()
     for key, val in pairs(args) do
@@ -294,7 +295,6 @@ function KongWaf:access(conf)
 
   if optionIsOn(conf.openwaf) then
     uri = unescape(unescape(ngx.var.request_uri))
-    kong.log.err(uri)
     request = kong.request
     headers = request.get_headers()
     logpath = conf.logdir
