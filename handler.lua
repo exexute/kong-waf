@@ -158,7 +158,6 @@ end
 -- 定义waf插件get参数检测函数
 local function waf_args_check( ... )
   -- body
-  kong.log.err("enter args check")
   for i = 2, #rules_array do
     local args = request.get_query()
     for key, val in pairs(args) do
@@ -170,11 +169,11 @@ local function waf_args_check( ... )
           end
           table.insert(t,v)
         end
-        data=table.concat(t, " ")
-        kong.log.err(data)
+        data=table.concat(t, " ")        
       else
         data=val
       end
+      kong.log.err(data)
       if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
         kong_log('args', rules_array[i][1])
         return true
