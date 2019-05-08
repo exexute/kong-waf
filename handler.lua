@@ -6,7 +6,9 @@ local FORBIDDEN = 403
 -- cache of parsed CIDR values
 local cache = {}
 
--- 定义kong.request局部变量, 用局部变量可以提升30%的速度, 编译之后 局部变量汇编代码1行, 全局变量汇编代码4行
+--用局部变量可以提升30%的速度, 所以将变量提到上面来定义
+
+-- 定义request局部变量, 
 local request = nil
 local ngx = ngx
 local kong = kong
@@ -14,6 +16,7 @@ local ngxmatch = ngx.re.match
 local unescape = ngx.unescape_uri
 local binary_remote_addr = nil
 
+-- 定义标准变量
 local table = table
 local pairs = pairs
 local lower = string.lower
@@ -167,6 +170,7 @@ local function waf_args_check( ... )
           table.insert(t,v)
         end
         data=table.concat(t, " ")
+        kong.log.err(data)
       else
         data=val
       end
