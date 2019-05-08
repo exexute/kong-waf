@@ -160,9 +160,7 @@ local function waf_args_check( ... )
   -- body
   for i = 2, #rules_array do
     local args = request.get_query()
-    kong.log.err(args)
     for key, val in pairs(args) do
-      kong.log.err(key)
       if type(val)=='table' then
         local t={}
         for k,v in pairs(val) do
@@ -175,6 +173,7 @@ local function waf_args_check( ... )
       else
         data=val
       end
+      kong.log.err(data)
       if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
         kong_log('args', rules_array[i][1])
         return true
