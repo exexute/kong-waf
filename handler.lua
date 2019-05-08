@@ -173,7 +173,8 @@ local function waf_args_check( ... )
       else
         data=val
       end
-      kong.log.err(data)
+      --kong.log.err(data)
+      kong.log.err("i am for")
       if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
         kong_log('args', rules_array[i][1])
         return true
