@@ -262,6 +262,7 @@ end
 -- 构造插件初始化函数, 在每个Nginx Worker启动时执行
 function KongWaf:init_worker()
   KongWaf.super.init_worker(self)
+  kong.log.err("init_worker")
   local ok, err = iputils.enable_lrucache()
   if not ok then
     kong.log.err("could not enable lrucache: ", err)
