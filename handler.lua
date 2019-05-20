@@ -160,7 +160,6 @@ local function waf_args_check( ... )
   -- body
   for i = 2, #rules_array do
     local args = request.get_query()
-    kong.log.err(#args)
     for key, val in pairs(args) do
       if type(val)=='table' then
         local t={}
@@ -185,8 +184,7 @@ end
 
 -- 定义waf插件cookie参数检测函数
 local function waf_cookie_check( ... )
-	-- body
-  local ck = ngx.var.http_cookie
+	local ck = request.get_header('Cookie')
   if ck then
     for i = 2, #rules_array do
       if rule ~="" and ngxmatch(ck,rules_array[i][2],"isjo") then
