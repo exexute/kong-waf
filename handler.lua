@@ -131,11 +131,9 @@ end
 
 -- 定义waf插件url检测函数
 local function waf_url_check( ... )
-  for i = 1, #rules_array do
-    if rule ~="" and ngxmatch(uri,rules_array[i][2],"isjo") then
-      waf_log('uri', rules_array[i][1])
-      return true
-    end
+  if ngxmatch(uri,rules_array[1][2],"isjo") then
+    waf_log('uri', rules_array[i][1])
+    return true
   end
   return false
 end
@@ -146,7 +144,7 @@ local function waf_ua_check( ... )
   local ua = ngx.var.http_user_agent
   if ua ~= nil then
     for i = 2, #rules_array do
-      if rule ~="" and ngxmatch(ua,rules_array[i][2],"isjo") then
+      if ngxmatch(ua,rules_array[i][2],"isjo") then
         kong_log('User-Agent', rules_array[i][1])
         return true
       end
@@ -173,7 +171,7 @@ local function waf_args_check( ... )
       else
         data=val
       end
-      if data and type(data) ~= "boolean" and rule ~="" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
+      if data and type(data) ~= "boolean" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
         kong_log('args', rules_array[i][1])
         return true
       end
@@ -187,7 +185,7 @@ local function waf_cookie_check( ... )
 	local ck = request.get_header('Cookie')
   if ck then
     for i = 2, #rules_array do
-      if rule ~="" and ngxmatch(ck,rules_array[i][2],"isjo") then
+      if ngxmatch(ck,rules_array[i][2],"isjo") then
         kong_log('cookie', rules_array[i][1])
         return true
       end
@@ -199,7 +197,7 @@ end
 local function waf_body_check( data )
 	-- body
 	for i = 2, #rules_array do
-		if rule ~= "" and data ~= "" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
+		if data ~= "" and ngxmatch(ngx.unescape_uri(data),rules_array[i][2],"isjo") then
 			kong_log( 'body', rules_array[i][1] )
 			return true
     end
