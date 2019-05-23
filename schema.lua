@@ -16,20 +16,16 @@ end
 return {
   name = "kong-waf",
   fields = {
-    whitelist = {type = "array", func = validate_ips},
-    blacklist = {type = "array", func = validate_ips},
-    openwaf = {type = "string", required = true},
-    rulepath = {type = "path", required = true},
-    attacklog = {type = "string", required = true},
-    logdir = {type = "path", required = true},
-    urldeny = {type = "string", required = true},
-    urlmatch = {type = "string", required = true},
-    argsmatch = {type = "string", required = true},
-    postmatch = {type = "string", required = true},
-    uamatch = {type = "string", required = true},
-    Redirect = {type = "string", required = true},
-    cookiematch = {type = "string", required = true},
-    black_fileExt = {type = "array", elements = string}
+    whitelist = { type = "array", func = validate_ips },
+    blacklist = { type = "array", func = validate_ips },
+    openwaf = { type = "string", required = true, default = "on" },
+    logdir = { type = "path", required = true, default = "/tmp" },
+    urldeny = { type = "string", required = true, default = "off" },
+    urlmatch = { type = "string", required = true, default = "off" },
+    argsmatch = { type = "string", required = true, default = "on" },
+    postmatch = { type = "string", required = true, default = "on" },
+    uamatch = { type = "string", required = true, default = "on" },
+    cookiematch = { type = "string", required = true, default = "on" }
   },
   self_check = function(schema, plugin_t, dao, is_update)
     local wl = type(plugin_t.whitelist) == "table" and plugin_t.whitelist or {}
@@ -37,8 +33,8 @@ return {
 
     if #wl > 0 and #bl > 0 then
       return false, Errors.schema "you cannot set both a whitelist and a blacklist"
-    elseif #wl == 0 and #bl == 0 then
-      return false, Errors.schema "you must set at least a whitelist or blacklist"
+    --elseif #wl == 0 and #bl == 0 then
+    --  return false, Errors.schema "you must set at least a whitelist or blacklist"
     end
 
     return true

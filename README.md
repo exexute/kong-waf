@@ -28,51 +28,49 @@
 | `route_id` |  | 调用插件的路由id |
 | `enabled` | true | 插件是否启用, 默认为启用 |
 | `consumer_id` |  | 调用插件的消费者id |
-| `config.whitelist` |  | ip白名单, 该部分IP不需要经过waf检查 |
+| `config.whitelist` |  | ip白名单, 只允许该部分IP访问后端服务 |
 | `config.blacklist` |  | ip黑名单, 该部分IP不允许访问后端服务 |
-| `config.openwaf` |  | 是否打开waf功能, `on`-启用waf, `off`-不启用 (打开waf之后会利用下面的waf检测规则对请求做检测, 占用服务器资源情况需自行压测) |
-| `config.rulepath` |  | waf规则所在目录, 必须指定 |
-| `config.attacklog` |  | 是否记录攻击日志, `on`-记录, `off` - 不记录 |
-| `config.logdir` |  | 日志的输出位置 |
-| `config.urldeny` |  | 是否检查url, `on`-检查, 其他不检查 |
-| `config.cookiematch` |  | 是否检查cookie值, `on` - 检查 |
-| `config.postmatch` |  | 是否检查post请求, `on` - 检查 |
-| `config.black_fileExt` |  | 禁止上传文件的后缀名列表, php,jsp,do |
+| `config.openwaf` | on | 是否打开waf功能, `on`-启用waf, `off`-不启用 (打开waf之后会利用下面的waf检测规则对请求做检测, 占用服务器资源情况需自行压测) |
+| `config.logdir` | /tmp/ | waf插件记录日志的目录, 必须指定且nobody用户可写 |
+| `config.urldeny` | off | 是否拦截攻击, `on`：拦截, `off`：不拦截 |
+| `config.urlmatch` | off | 是否检查url, `on`：检查, `off`：不检查 |
+| `config.argsmatch` | on | 是否检查url参数, `on`：检查, `off`：不检查 |
+| `config.postmatch` | on | 是否检查post参数, `on`：检查, `off`：不检查 |
+| `config.uamatch` | on | 是否检查User-Agent, `on`：检查, `off`：不检查 |
+| `config.cookiematch` | on | 是否检查cookie, `on`：检查, `off`：不检查 |
 
 ### 在某一个service上启用服务
-在服务上启用插件
+在某一个service上服务上启用插件
 ```bash
 $ curl -X POST http://kong:8001/services/{service}/plugins \
     --data "name=kong-waf" \
     --data "config.blacklist=10.129.7.236,10.129.7.235" \
     --data "config.openwaf=on" \
-    --data "config.rulepath=wafconf" \
-    --data "config.attacklog=on" \
     --data "config.logdir=/var/log/kong/waf/" \
     --data "config.urldeny=on" \
-    --data "config.Redirect=on" \
-    --data "config.cookiematch=on" \
+    --data "config.urlmatch=off" \
+    --data "config.argsmatch=on" \
     --data "config.postmatch=on" \
-    --data "config.black_fileExt=php,jsp,asp"
+    --data "config.uamatch=on" \
+    --data "config.cookiematch=on"
 ```
 - `service`: 服务的名字或id值
 
 
 ### 在某一个route上启用服务
-通过下面的请求来实现在服务上启用插件
+在某一个route上启用插件
 ```bash
 $ curl -X POST http://kong:8001/routes/{route_id}/plugins \
     --data "name=kong-waf" \
     --data "config.blacklist=10.129.7.236,10.129.7.235" \
     --data "config.openwaf=on" \
-    --data "config.rulepath=wafconf" \
-    --data "config.attacklog=on" \
     --data "config.logdir=/var/log/kong/waf/" \
     --data "config.urldeny=on" \
-    --data "config.Redirect=on" \
-    --data "config.cookiematch=on" \
+    --data "config.urlmatch=off" \
+    --data "config.argsmatch=on" \
     --data "config.postmatch=on" \
-    --data "config.black_fileExt=php,jsp,asp"
+    --data "config.uamatch=on" \
+    --data "config.cookiematch=on"
 ```
 - `route_id`: 服务的名字或id值
 
@@ -85,14 +83,13 @@ $ curl -X POST http://kong:8001/plugins \
     --data "consumer_id={consumer_id}" \
     --data "config.blacklist=10.129.7.236,10.129.7.235" \
     --data "config.openwaf=on" \
-    --data "config.rulepath=wafconf" \
-    --data "config.attacklog=on" \
     --data "config.logdir=/var/log/kong/waf/" \
     --data "config.urldeny=on" \
-    --data "config.Redirect=on" \
-    --data "config.cookiematch=on" \
+    --data "config.urlmatch=off" \
+    --data "config.argsmatch=on" \
     --data "config.postmatch=on" \
-    --data "config.black_fileExt=php,jsp,asp"
+    --data "config.uamatch=on" \
+    --data "config.cookiematch=on"
 ```
 - `consumer_id`: 服务的名字或id值
 
@@ -103,14 +100,13 @@ $ curl -X POST http://kong:8001/plugins \
     --data "name=kong-waf" \
     --data "config.blacklist=10.129.7.236,10.129.7.235" \
     --data "config.openwaf=on" \
-    --data "config.rulepath=wafconf" \
-    --data "config.attacklog=on" \
     --data "config.logdir=/var/log/kong/waf/" \
     --data "config.urldeny=on" \
-    --data "config.Redirect=on" \
-    --data "config.cookiematch=on" \
+    --data "config.urlmatch=off" \
+    --data "config.argsmatch=on" \
     --data "config.postmatch=on" \
-    --data "config.black_fileExt=php,jsp,asp"
+    --data "config.uamatch=on" \
+    --data "config.cookiematch=on"
 ```
 
 ### 仅启用屏蔽IP功能
